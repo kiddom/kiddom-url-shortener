@@ -1,35 +1,49 @@
+import base64
 import hashlib
-import sqlite3
 import json
-from datetime import datetime
 
 import pandas as pd
+import requests
 import streamlit as st
 
-DB_PATH = "urls.db"
+REPO = "pedagocode/kiddom-url-shortener"
+FILE_PATH = "data/urls.json"
+
+ALLOWED_DOMAINS = ("kiddom.co", "amazonaws.com")
 
 
-def get_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS url_mappings (
-            short_code TEXT PRIMARY KEY,
-            original_url TEXT NOT NULL,
-            created_at TEXT DEFAULT (datetime('now'))
-        )
-    """)
-    conn.commit()
-    return conn
+# ── GitHub helpers ────────────────────────────────────────────────────────────
+
+def gh_headers():
+    token = st.secrets.get("GITHUB_TOKEN", "")
+    return {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
 
 
-ALLOWED_DOMAINS = (
-    "kiddom.co",
-    "app.kiddom.co",
-    "amazonaws.com",
-)
+def fetch_mappings():
+    r = requests.get(
+        f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}",
+        headers=gh_headers(),
+    )
+    if r.status_code == 200:
+        data = r.json()
+        content = base64.b64decode(data["content"]).decode()
+        return json.loads(content), data["sha"]
+    return [], None
 
 
-def is_allowed_url(url: str) -> bool:
+def push_mappings(mappings, sha):
+    content = base64.b64encode(json.dumps(mappings, indent=2).encode()).decode()
+    r = requests.put(
+        f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}",
+        headers=gh_headers(),
+        json={"message": "Update URL mappings", "content": content, "sha": sha},
+    )
+    return r.status_code in (200, 201)
+
+
+# ── URL helpers ───────────────────────────────────────────────────────────────
+
+def is_allowed(url: str) -> bool:
     from urllib.parse import urlparse
     try:
         host = urlparse(url).netloc.lower()
@@ -43,143 +57,118 @@ def make_short_code(url: str) -> str:
     return f"kiddom-{digest}"
 
 
-def save_mapping(conn, short_code: str, original_url: str):
-    conn.execute(
-        "INSERT OR IGNORE INTO url_mappings (short_code, original_url) VALUES (?, ?)",
-        (short_code, original_url),
-    )
-    conn.commit()
+def shorten_and_deploy(new_entries: list[dict]) -> tuple[bool, str]:
+    """Add new_entries to urls.json and push. Returns (success, message)."""
+    mappings, sha = fetch_mappings()
+    if sha is None:
+        return False, "Could not reach GitHub. Check your GITHUB_TOKEN secret."
+
+    existing_codes = {m["short_code"] for m in mappings}
+    added = [e for e in new_entries if e["short_code"] not in existing_codes]
+    if not added:
+        return True, "All URLs already exist — no changes needed."
+
+    mappings.extend(added)
+    ok = push_mappings(mappings, sha)
+    if ok:
+        return True, f"Deployed {len(added)} link(s). Active in ~2 minutes."
+    return False, "Push to GitHub failed. Check your GITHUB_TOKEN permissions."
 
 
-def load_all_mappings(conn) -> pd.DataFrame:
-    return pd.read_sql(
-        "SELECT short_code, original_url, created_at FROM url_mappings ORDER BY created_at DESC",
-        conn,
-    )
-
+# ── App ───────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Kiddom URL Shortener", page_icon="🔗", layout="centered")
 st.title("🔗 Kiddom URL Shortener")
-st.caption("Generate branded short codes for Kiddom content links.")
 
-conn = get_conn()
+if not st.secrets.get("GITHUB_TOKEN"):
+    st.error(
+        "**GITHUB_TOKEN not set.** Add it to your Streamlit secrets:\n\n"
+        "```toml\nGITHUB_TOKEN = 'ghp_your_token_here'\n```\n\n"
+        "The token needs **Contents: Read & Write** permission on this repo."
+    )
+    st.stop()
 
-tab1, tab2, tab3, tab4 = st.tabs(["Single URL", "Bulk CSV", "View All Mappings", "Deploy"])
+tab1, tab2, tab3 = st.tabs(["Single URL", "Bulk CSV", "All Links"])
 
-# ── Tab 1: Single URL ────────────────────────────────────────────────────────
+# ── Single URL ────────────────────────────────────────────────────────────────
 with tab1:
-    url_input = st.text_input("Enter a URL to shorten", placeholder="https://app.kiddom.co/...")
+    url_input = st.text_input("Paste a Kiddom URL", placeholder="https://app.kiddom.co/...")
 
-    if st.button("Shorten", type="primary", key="single"):
+    if st.button("Shorten & Deploy", type="primary"):
         url = url_input.strip()
         if not url:
-            st.warning("Please enter a URL.")
+            st.warning("Enter a URL.")
         elif not url.startswith(("http://", "https://")):
             st.error("URL must start with http:// or https://")
-        elif not is_allowed_url(url):
+        elif not is_allowed(url):
             st.error("Only Kiddom platform URLs and Kiddom AWS assets are allowed.")
         else:
             code = make_short_code(url)
-            save_mapping(conn, code, url)
-            st.success("Short code generated!")
-            st.code(code, language=None)
-            st.caption(f"Original: {url}")
-            st.info("Go to the **Deploy** tab to publish this link.")
+            with st.spinner("Deploying…"):
+                ok, msg = shorten_and_deploy([{"short_code": code, "original_url": url}])
+            if ok:
+                st.success(msg)
+                st.code(code)
+            else:
+                st.error(msg)
 
-# ── Tab 2: Bulk CSV ──────────────────────────────────────────────────────────
+# ── Bulk CSV ──────────────────────────────────────────────────────────────────
 with tab2:
-    uploaded = st.file_uploader("Upload a CSV file", type="csv")
+    uploaded = st.file_uploader("Upload CSV", type="csv")
 
     if uploaded:
         df = pd.read_csv(uploaded)
-        st.write("**Preview** (first 5 rows)")
         st.dataframe(df.head(), use_container_width=True)
+        url_col = st.selectbox("URL column", df.columns.tolist())
 
-        url_col = st.selectbox("Which column contains the URLs?", options=df.columns.tolist())
-
-        if st.button("Generate Short Codes", type="primary", key="bulk"):
-            codes = []
-            skipped = 0
+        if st.button("Shorten & Deploy All", type="primary"):
+            entries, blocked, skipped = [], [], 0
             for raw in df[url_col]:
-                if pd.isna(raw) or not str(raw).strip().startswith(("http://", "https://")):
-                    codes.append("")
+                url = str(raw).strip()
+                if pd.isna(raw) or not url.startswith(("http://", "https://")):
                     skipped += 1
-                elif not is_allowed_url(str(raw).strip()):
-                    codes.append("BLOCKED — not a Kiddom URL")
-                    skipped += 1
+                elif not is_allowed(url):
+                    blocked.append(url)
                 else:
-                    url = str(raw).strip()
-                    code = make_short_code(url)
-                    save_mapping(conn, code, url)
-                    codes.append(code)
+                    entries.append({"short_code": make_short_code(url), "original_url": url})
 
-            df["short_url"] = codes
-            generated = sum(1 for c in codes if c and not c.startswith("BLOCKED"))
-            st.success(f"Generated {generated} short codes. {skipped} rows skipped.")
-            st.dataframe(df, use_container_width=True)
+            if blocked:
+                st.warning(f"{len(blocked)} URL(s) blocked (not Kiddom domains).")
+            if skipped:
+                st.caption(f"{skipped} empty/invalid row(s) skipped.")
 
-            csv_bytes = df.to_csv(index=False).encode()
-            st.download_button(
-                label="⬇️ Download Updated CSV",
-                data=csv_bytes,
-                file_name="urls_with_short_codes.csv",
-                mime="text/csv",
-            )
-            st.info("Go to the **Deploy** tab to publish these links.")
+            if entries:
+                df_valid = df[df[url_col].apply(lambda u: is_allowed(str(u).strip()))]
+                df_valid = df_valid.copy()
+                df_valid["short_url"] = [e["short_code"] for e in entries]
 
-# ── Tab 3: All Mappings ──────────────────────────────────────────────────────
+                with st.spinner(f"Deploying {len(entries)} links…"):
+                    ok, msg = shorten_and_deploy(entries)
+
+                if ok:
+                    st.success(msg)
+                    st.dataframe(df_valid[[url_col, "short_url"]], use_container_width=True)
+                    st.download_button(
+                        "⬇️ Download CSV with short codes",
+                        df_valid.to_csv(index=False).encode(),
+                        "urls_with_short_codes.csv",
+                        "text/csv",
+                    )
+                else:
+                    st.error(msg)
+
+# ── All Links ─────────────────────────────────────────────────────────────────
 with tab3:
-    all_df = load_all_mappings(conn)
-
-    if all_df.empty:
-        st.info("No mappings yet. Use the Single URL or Bulk CSV tabs to get started.")
+    mappings, _ = fetch_mappings()
+    if not mappings:
+        st.info("No links yet.")
     else:
-        st.write(f"**{len(all_df)} total mappings**")
-        st.dataframe(all_df, use_container_width=True)
-
-        csv_all = all_df.to_csv(index=False).encode()
+        df_all = pd.DataFrame(mappings)
+        st.write(f"**{len(df_all)} active links**")
+        st.dataframe(df_all, use_container_width=True)
         st.download_button(
-            label="⬇️ Download All Mappings as CSV",
-            data=csv_all,
-            file_name="all_kiddom_mappings.csv",
-            mime="text/csv",
-        )
-
-# ── Tab 4: Deploy ────────────────────────────────────────────────────────────
-with tab4:
-    st.subheader("Deploy Redirect Pages")
-    st.write(
-        "Export your URL mappings as `urls.json`, commit it to the repo, "
-        "and the GitHub Action will automatically generate and deploy the redirect pages."
-    )
-
-    all_df = load_all_mappings(conn)
-
-    if all_df.empty:
-        st.info("No mappings to deploy yet.")
-    else:
-        records = all_df[["short_code", "original_url"]].to_dict(orient="records")
-        json_bytes = json.dumps(records, indent=2).encode()
-
-        st.download_button(
-            label="⬇️ Download urls.json",
-            data=json_bytes,
-            file_name="urls.json",
-            mime="application/json",
-        )
-
-        st.markdown("**After downloading:**")
-        st.code(
-            "# 1. Move urls.json to the data/ folder in the repo\n"
-            "# 2. Commit and push:\n"
-            "git add data/urls.json\n"
-            'git commit -m "Update URL mappings"\n'
-            "git push\n\n"
-            "# GitHub Action deploys redirect pages automatically (~2 min)",
-            language="bash",
-        )
-
-        st.markdown("---")
-        st.caption(
-            "**Coming soon:** When connected to Snowflake, this will trigger deployment automatically."
+            "⬇️ Download all",
+            df_all.to_csv(index=False).encode(),
+            "kiddom_links.csv",
+            "text/csv",
         )
