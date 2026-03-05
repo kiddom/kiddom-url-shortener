@@ -89,7 +89,7 @@ if not st.secrets.get("GITHUB_TOKEN"):
     )
     st.stop()
 
-tab1, tab2, tab3 = st.tabs(["Single URL", "Bulk CSV", "All Links"])
+tab1, tab2, tab3 = st.tabs(["Single URL", "Google Sheet", "All Links"])
 
 # ── Single URL ────────────────────────────────────────────────────────────────
 with tab1:
@@ -115,13 +115,23 @@ with tab1:
             else:
                 st.error(msg)
 
-# ── Bulk CSV ──────────────────────────────────────────────────────────────────
+# ── Google Sheet ──────────────────────────────────────────────────────────────
 with tab2:
-    uploaded = st.file_uploader("Upload CSV", type="csv")
+    st.caption("Sheet must be shared: File → Share → Anyone with the link → Viewer")
+    sheet_input = st.text_input("Paste Google Sheet URL", placeholder="https://docs.google.com/spreadsheets/d/...")
 
-    if uploaded:
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head(), use_container_width=True)
+    df = None
+    if sheet_input.strip():
+        try:
+            sheet_id = sheet_input.strip().split("/d/")[1].split("/")[0]
+            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+            df = pd.read_csv(csv_url)
+            st.dataframe(df.head(), use_container_width=True)
+        except Exception:
+            st.error("Could not load sheet. Make sure it's shared publicly and the URL is correct.")
+            df = None
+
+    if df is not None:
         url_col = st.selectbox("URL column", df.columns.tolist())
 
         if st.button("Shorten All", type="primary"):
