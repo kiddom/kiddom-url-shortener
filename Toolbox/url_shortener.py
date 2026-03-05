@@ -88,7 +88,7 @@ if not st.secrets.get("GITHUB_TOKEN"):
     )
     st.stop()
 
-tab1, tab2, tab3 = st.tabs(["Single URL", "Google Sheet", "All Links"])
+tab1, tab2 = st.tabs(["Single URL", "Google Sheet"])
 
 # ── Single URL ────────────────────────────────────────────────────────────────
 with tab1:
@@ -191,18 +191,3 @@ with tab2:
                 else:
                     st.error(msg)
 
-# ── All Links ─────────────────────────────────────────────────────────────────
-with tab3:
-    mappings, _ = fetch_mappings()
-    if not mappings:
-        st.info("No links yet.")
-    else:
-        df_all = pd.DataFrame(mappings)
-        st.write(f"**{len(df_all)} active links**")
-        st.dataframe(df_all, use_container_width=True)
-        st.download_button(
-            "⬇️ Download all",
-            df_all.to_csv(index=False).encode(),
-            "kiddom_links.csv",
-            "text/csv",
-        )
