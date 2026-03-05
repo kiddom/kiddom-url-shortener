@@ -120,18 +120,26 @@ with tab2:
     st.caption("Sheet must be shared: File → Share → Anyone with the link → Viewer")
     sheet_input = st.text_input("Paste Google Sheet URL", placeholder="https://docs.google.com/spreadsheets/d/...")
 
-    df = None
-    if sheet_input.strip():
-        with st.spinner("Loading sheet…"):
-            try:
-                sheet_id = sheet_input.strip().split("/d/")[1].split("/")[0]
-                csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-                df = pd.read_csv(csv_url)
-                st.success(f"Loaded {len(df)} rows.")
-                st.dataframe(df.head(), use_container_width=True)
-            except Exception:
-                st.error("Could not load sheet. Make sure it's shared publicly and the URL is correct.")
-                df = None
+    if "sheet_df" not in st.session_state:
+        st.session_state.sheet_df = None
+
+    if st.button("Load Sheet"):
+        if not sheet_input.strip():
+            st.warning("Paste a Google Sheet URL first.")
+        else:
+            with st.spinner("Loading sheet…"):
+                try:
+                    sheet_id = sheet_input.strip().split("/d/")[1].split("/")[0]
+                    csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+                    st.session_state.sheet_df = pd.read_csv(csv_url)
+                except Exception:
+                    st.error("Could not load sheet. Make sure it's shared publicly and the URL is correct.")
+                    st.session_state.sheet_df = None
+
+    df = st.session_state.sheet_df
+    if df is not None:
+        st.success(f"Loaded {len(df)} rows.")
+        st.dataframe(df.head(), use_container_width=True)
 
     if df is not None:
         url_col = st.selectbox("URL column", df.columns.tolist())
