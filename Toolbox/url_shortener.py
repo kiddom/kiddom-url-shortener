@@ -142,18 +142,28 @@ with tab2:
         st.dataframe(df.head(), use_container_width=True)
 
     if df is not None:
-        url_col = st.selectbox("URL column", df.columns.tolist())
+        # Auto-detect URL column — first column containing https values
+        url_col = next(
+            (col for col in df.columns if df[col].astype(str).str.startswith("http").any()),
+            df.columns[0]
+        )
+        st.caption(f"URLs detected in column: **{url_col}** — short URLs will be written in the next column.")
 
         if st.button("Shorten All", type="primary"):
-            entries, blocked, skipped = [], [], 0
+            entries, short_codes = [], []
+            blocked, skipped = [], 0
             for raw in df[url_col]:
                 url = str(raw).strip()
                 if pd.isna(raw) or not url.startswith(("http://", "https://")):
                     skipped += 1
+                    short_codes.append("")
                 elif not is_allowed(url):
                     blocked.append(url)
+                    short_codes.append("BLOCKED")
                 else:
-                    entries.append({"short_code": make_short_code(url), "original_url": url})
+                    code = make_short_code(url)
+                    entries.append({"short_code": code, "original_url": url})
+                    short_codes.append(f"{PAGES_BASE}/{code}")
 
             if blocked:
                 st.warning(f"{len(blocked)} URL(s) blocked (not Kiddom domains).")
@@ -161,19 +171,19 @@ with tab2:
                 st.caption(f"{skipped} empty/invalid row(s) skipped.")
 
             if entries:
-                df_valid = df[df[url_col].apply(lambda u: is_allowed(str(u).strip()))]
-                df_valid = df_valid.copy()
-                df_valid["short_url"] = [e["short_code"] for e in entries]
+                df_out = df.copy()
+                url_col_idx = df_out.columns.tolist().index(url_col)
+                df_out.insert(url_col_idx + 1, "short url", short_codes)
 
                 with st.spinner(f"Deploying {len(entries)} links…"):
                     ok, msg = shorten_and_deploy(entries)
 
                 if ok:
                     st.success(msg)
-                    st.dataframe(df_valid[[url_col, "short_url"]], use_container_width=True)
+                    st.dataframe(df_out[[url_col, "short url"]], use_container_width=True)
                     st.download_button(
-                        "⬇️ Download CSV with short codes",
-                        df_valid.to_csv(index=False).encode(),
+                        "⬇️ Download updated sheet as CSV",
+                        df_out.to_csv(index=False).encode(),
                         "urls_with_short_codes.csv",
                         "text/csv",
                     )
