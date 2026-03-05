@@ -95,7 +95,7 @@ tab1, tab2, tab3 = st.tabs(["Single URL", "Bulk CSV", "All Links"])
 with tab1:
     url_input = st.text_input("Paste a Kiddom URL", placeholder="https://app.kiddom.co/...")
 
-    if st.button("Shorten & Deploy", type="primary"):
+    if st.button("Shorten", type="primary"):
         url = url_input.strip()
         if not url:
             st.warning("Enter a URL.")
@@ -124,7 +124,7 @@ with tab2:
         st.dataframe(df.head(), use_container_width=True)
         url_col = st.selectbox("URL column", df.columns.tolist())
 
-        if st.button("Shorten & Deploy All", type="primary"):
+        if st.button("Shorten All", type="primary"):
             entries, blocked, skipped = [], [], 0
             for raw in df[url_col]:
                 url = str(raw).strip()
