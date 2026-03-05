@@ -8,6 +8,7 @@ import streamlit as st
 
 REPO = "pedagocode/kiddom-url-shortener"
 FILE_PATH = "data/urls.json"
+PAGES_BASE = "https://pedagocode.github.io/kiddom-url-shortener"
 
 ALLOWED_DOMAINS = ("kiddom.co", "amazonaws.com")
 
@@ -108,7 +109,9 @@ with tab1:
                 ok, msg = shorten_and_deploy([{"short_code": code, "original_url": url}])
             if ok:
                 st.success(msg)
-                st.code(code)
+                full_link = f"{PAGES_BASE}/{code}"
+                st.markdown(f"**Your short link:** [{full_link}]({full_link})")
+                st.caption("Link will be active in ~2 minutes after GitHub deploys.")
             else:
                 st.error(msg)
 
