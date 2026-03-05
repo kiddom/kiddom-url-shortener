@@ -122,14 +122,16 @@ with tab2:
 
     df = None
     if sheet_input.strip():
-        try:
-            sheet_id = sheet_input.strip().split("/d/")[1].split("/")[0]
-            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-            df = pd.read_csv(csv_url)
-            st.dataframe(df.head(), use_container_width=True)
-        except Exception:
-            st.error("Could not load sheet. Make sure it's shared publicly and the URL is correct.")
-            df = None
+        with st.spinner("Loading sheet…"):
+            try:
+                sheet_id = sheet_input.strip().split("/d/")[1].split("/")[0]
+                csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+                df = pd.read_csv(csv_url)
+                st.success(f"Loaded {len(df)} rows.")
+                st.dataframe(df.head(), use_container_width=True)
+            except Exception:
+                st.error("Could not load sheet. Make sure it's shared publicly and the URL is correct.")
+                df = None
 
     if df is not None:
         url_col = st.selectbox("URL column", df.columns.tolist())
