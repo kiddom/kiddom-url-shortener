@@ -111,7 +111,7 @@ with tab1:
                 st.success(msg)
                 full_link = f"{PAGES_BASE}/{code}"
                 st.markdown(f"**Your short link:** [{full_link}]({full_link})")
-                st.caption("Link will be active in ~2 minutes after GitHub deploys.")
+                st.caption("Link will be active in ~2 minutes.")
             else:
                 st.error(msg)
 
