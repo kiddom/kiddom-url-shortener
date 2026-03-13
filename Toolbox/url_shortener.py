@@ -115,6 +115,19 @@ html, body {
 [data-testid="stHeader"] {
     background-color: transparent !important;
 }
+/* Top-right toolbar buttons (Fork, GitHub, menu) */
+[data-testid="stHeader"] button,
+[data-testid="stHeader"] a,
+[data-testid="stHeader"] svg,
+[data-testid="stToolbar"] button,
+[data-testid="stToolbar"] a,
+[data-testid="stToolbar"] svg,
+[data-testid="stToolbar"] span,
+[data-testid="stDecoration"] ~ header button,
+header[data-testid="stHeader"] * {
+    color: #242D2C !important;
+    fill: #242D2C !important;
+}
 [data-testid="stSidebar"] {
     background-color: #E5E8E7 !important;
 }
@@ -182,13 +195,8 @@ html, body {
     align-items: center;
     gap: 1rem;
 }
-.kiddom-logo {
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-}
 .kiddom-header-text h1 {
-    color: white !important;
+    color: #FFFFFF !important;
     font-weight: 700;
     font-size: 1.8rem;
     margin: 0;
@@ -268,13 +276,6 @@ button[data-testid="stBaseButton-primary"]:hover {
 </style>
 
 <div class="kiddom-header">
-    <svg class="kiddom-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="50" fill="white"/>
-        <!-- Geometric K: vertical bar + two triangular arms -->
-        <rect x="25" y="22" width="14" height="56" rx="2" fill="#EF6C56"/>
-        <polygon points="39,50 75,24 75,42 50,50" fill="#EF6C56"/>
-        <polygon points="39,50 50,50 75,58 75,76" fill="#EF6C56"/>
-    </svg>
     <div class="kiddom-header-text">
         <h1>Kiddom ShortURL</h1>
         <p>Digital forward. Human first.</p>
