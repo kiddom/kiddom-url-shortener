@@ -95,12 +95,27 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
 
-/* Global font and text color */
+/* Global font and text color (no span — that breaks Material icon fonts) */
 html, body, [class*="st-"], .stApp, .stMarkdown, input, textarea, select,
 button, .stSelectbox, .stTextInput, .stTabs, .stDataFrame,
-label, p, span, div, h1, h2, h3, h4, h5, h6 {
+label, p, div, h1, h2, h3, h4, h5, h6 {
     font-family: 'Lexend', sans-serif !important;
     color: #242D2C !important;
+}
+/* Apply Lexend to spans EXCEPT Material Symbols icon spans */
+span:not([class*="material"]):not([data-testid*="Icon"]) {
+    font-family: 'Lexend', sans-serif !important;
+}
+/* Ensure Material Symbols icons always use their own font */
+span.material-symbols-rounded,
+span.material-symbols-outlined,
+span.material-icons,
+[data-testid="stMainMenuPopover"] span[class*="material"],
+[role="dialog"] span[class*="material"] {
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+    font-size: 20px !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    font-feature-settings: 'liga' !important;
 }
 
 /* Force light background */
@@ -115,27 +130,28 @@ html, body {
 [data-testid="stHeader"] {
     background-color: transparent !important;
 }
-/* Top-right toolbar buttons (Fork, GitHub, menu) */
+/* Top-right toolbar: use color inheritance instead of explicit fill/stroke */
 [data-testid="stHeader"] button,
 [data-testid="stHeader"] a,
-[data-testid="stHeader"] span,
 [data-testid="stToolbar"] button,
 [data-testid="stToolbar"] a,
-[data-testid="stToolbar"] span,
 [data-testid="stDecoration"] ~ header button {
     color: #242D2C !important;
+    background-color: transparent !important;
 }
-/* Only fill the actual icon paths, not SVG containers */
-[data-testid="stHeader"] svg path,
-[data-testid="stHeader"] svg line,
-[data-testid="stHeader"] svg circle,
-[data-testid="stHeader"] svg polygon,
+/* Let SVGs inherit color via currentColor instead of forcing fill/stroke */
+[data-testid="stHeader"] svg,
+[data-testid="stToolbar"] svg {
+    color: #242D2C !important;
+}
 [data-testid="stToolbar"] svg path,
 [data-testid="stToolbar"] svg line,
 [data-testid="stToolbar"] svg circle,
-[data-testid="stToolbar"] svg polygon {
-    fill: #242D2C !important;
-    stroke: #242D2C !important;
+[data-testid="stHeader"] svg path,
+[data-testid="stHeader"] svg line,
+[data-testid="stHeader"] svg circle {
+    fill: currentColor !important;
+    stroke: none !important;
 }
 [data-testid="stSidebar"] {
     background-color: #E5E8E7 !important;
@@ -321,24 +337,29 @@ div[data-testid="stAppViewBlockContainer"] [data-baseweb="popover"],
     border-color: #D0D0D0 !important;
 }
 /* Prevent text overflow in menus */
-[data-testid="stMainMenuPopover"] *,
-[role="dialog"] * {
+[data-testid="stMainMenuPopover"] span,
+[data-testid="stMainMenuPopover"] p,
+[data-testid="stMainMenuPopover"] a,
+[role="dialog"] span,
+[role="dialog"] p,
+[role="dialog"] a {
     overflow-wrap: break-word !important;
     word-break: break-word !important;
-    max-width: 100% !important;
+    overflow: hidden !important;
     text-overflow: ellipsis !important;
+    font-size: 0.85rem !important;
+}
+[data-testid="stMainMenuPopover"],
+[role="dialog"] {
+    max-width: 300px !important;
+    overflow: hidden !important;
 }
 
-/* ── Toolbar icon dark-square fix ──────────────────────────────────────────── */
-/* Reset fill on SVG root elements (containers), only fill inner shapes */
-[data-testid="stHeader"] svg,
-[data-testid="stToolbar"] svg {
+/* ── Brand decoration SVGs: preserve their own fill/stroke ────────────────── */
+svg.brand-deco-top path,
+svg.brand-deco-bottom path {
     fill: none !important;
-}
-/* Ensure toolbar buttons have transparent backgrounds */
-[data-testid="stToolbar"] button,
-[data-testid="stHeader"] button {
-    background-color: transparent !important;
+    stroke: #EF6C56 !important;
 }
 </style>
 
