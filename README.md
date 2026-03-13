@@ -6,7 +6,7 @@ A Streamlit app for generating branded short links for Kiddom content URLs. Shor
 
 ## How It Works
 
-1. Select a **publisher prefix** (IM, EL, OSE, or Odell)
+1. Select a **publisher prefix** (EL, IM, Odell, or OSE)
 2. Paste a Kiddom URL (or load a Google Sheet of URLs)
 3. Click **Shorten** — the app generates a publisher-prefixed short code (e.g., `IM-k3xn7f`) and saves it to `data/urls.json`
 4. A GitHub Action automatically builds static redirect pages and deploys them to GitHub Pages
@@ -16,10 +16,10 @@ A Streamlit app for generating branded short links for Kiddom content URLs. Shor
 
 | Publisher | Example short link |
 |-----------|-------------------|
-| IM | `https://links.kiddom.co/IM-k3xn7f` |
 | EL | `https://links.kiddom.co/EL-d4e5f6` |
-| OSE | `https://links.kiddom.co/OSE-7a8b9c` |
+| IM | `https://links.kiddom.co/IM-k3xn7f` |
 | Odell | `https://links.kiddom.co/Odell-jm2e3d` |
+| OSE | `https://links.kiddom.co/OSE-7a8b9c` |
 
 > The custom domain removes the `/kiddom-url-shortener/` path segment automatically.
 > Once IT sets up the DNS CNAME, all links resolve at `links.kiddom.co/<prefix>-<code>`.
@@ -28,7 +28,7 @@ A Streamlit app for generating branded short links for Kiddom content URLs. Shor
 
 ## Features
 
-- **Publisher prefixes** — every short code is prefixed with the publisher name (IM, EL, OSE, Odell)
+- **Publisher prefixes** — every short code is prefixed with the publisher name (EL, IM, Odell, OSE)
 - **Single URL** — paste one URL, get one short link instantly
 - **Google Sheet** — load a sheet, generate short codes for all URLs, download updated CSV
 - **URL allowlist** — only `*.kiddom.co` and `*.amazonaws.com` URLs are accepted
