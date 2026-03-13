@@ -13,7 +13,7 @@ FILE_PATH = "data/urls.json"
 PAGES_BASE = "https://links.kiddom.co"
 
 ALLOWED_DOMAINS = ("kiddom.co", "amazonaws.com")
-PUBLISHERS = ["IM", "EL", "OSE", "Odell"]
+PUBLISHERS = ["EL", "IM", "Odell", "OSE"]
 SHEETS_PATTERN = re.compile(
     r"^https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9_-]+)"
 )
