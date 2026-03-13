@@ -13,6 +13,11 @@ PAGES_BASE = "https://links.kiddom.co"
 ALLOWED_DOMAINS = ("kiddom.co", "amazonaws.com")
 PUBLISHERS = ["IM", "EL", "OSE", "Odell"]
 
+# Unambiguous alphabet — excludes characters that are easily misread:
+#   0 / O / o  (zero vs letter O)
+#   1 / I / i / l / L  (one vs letter I vs letter L)
+SAFE_ALPHABET = "23456789abcdefghjkmnpqrstuvwxyz"  # 30 chars
+
 
 # ── GitHub helpers ────────────────────────────────────────────────────────────
 
@@ -65,8 +70,14 @@ def is_allowed(url: str) -> bool:
 
 
 def make_short_code(url: str, publisher: str) -> str:
-    digest = hashlib.sha256(url.strip().encode()).hexdigest()[:6]
-    return f"{publisher}-{digest}"
+    raw = hashlib.sha256(url.strip().encode()).digest()
+    num = int.from_bytes(raw[:8], "big")
+    base = len(SAFE_ALPHABET)
+    chars = []
+    for _ in range(6):
+        num, rem = divmod(num, base)
+        chars.append(SAFE_ALPHABET[rem])
+    return f"{publisher}-{''.join(chars)}"
 
 
 def shorten_and_deploy(new_entries: list[dict]) -> tuple[bool, str]:
