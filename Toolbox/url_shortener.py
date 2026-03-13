@@ -8,9 +8,10 @@ import streamlit as st
 
 REPO = "pedagocode/kiddom-url-shortener"
 FILE_PATH = "data/urls.json"
-PAGES_BASE = "https://pedagocode.github.io/kiddom-url-shortener"
+PAGES_BASE = "https://links.kiddom.co"
 
 ALLOWED_DOMAINS = ("kiddom.co", "amazonaws.com")
+PUBLISHERS = ["IM", "EL", "OSE", "Odell"]
 
 
 # ── GitHub helpers ────────────────────────────────────────────────────────────
@@ -45,17 +46,26 @@ def push_mappings(mappings, sha):
 # ── URL helpers ───────────────────────────────────────────────────────────────
 
 def is_allowed(url: str) -> bool:
+    import re
     from urllib.parse import urlparse
     try:
-        host = urlparse(url).netloc.lower()
-        return any(host == d or host.endswith("." + d) for d in ALLOWED_DOMAINS)
+        parsed = urlparse(url)
+        host = parsed.netloc.lower()
+        if not any(host == d or host.endswith("." + d) for d in ALLOWED_DOMAINS):
+            return False
+        # Block tree:version UUID URLs — only vanity slugs allowed
+        # UUID pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        uuid_pat = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+        if re.search(uuid_pat, parsed.path, re.IGNORECASE):
+            return False
+        return True
     except Exception:
         return False
 
 
-def make_short_code(url: str) -> str:
+def make_short_code(url: str, publisher: str) -> str:
     digest = hashlib.sha256(url.strip().encode()).hexdigest()[:6]
-    return f"kiddom-{digest}"
+    return f"{publisher}-{digest}"
 
 
 def shorten_and_deploy(new_entries: list[dict]) -> tuple[bool, str]:
@@ -92,6 +102,7 @@ tab1, tab2 = st.tabs(["Single URL", "Google Sheet"])
 
 # ── Single URL ────────────────────────────────────────────────────────────────
 with tab1:
+    publisher = st.selectbox("Publisher", PUBLISHERS, key="pub_single")
     url_input = st.text_input("Paste a Kiddom URL", placeholder="https://app.kiddom.co/...")
 
     if st.button("Shorten", type="primary"):
@@ -101,9 +112,9 @@ with tab1:
         elif not url.startswith(("http://", "https://")):
             st.error("URL must start with http:// or https://")
         elif not is_allowed(url):
-            st.error("Only Kiddom platform URLs and Kiddom AWS assets are allowed.")
+            st.error("Only Kiddom vanity URLs and S3 links allowed (no tree:version UUIDs).")
         else:
-            code = make_short_code(url)
+            code = make_short_code(url, publisher)
             with st.spinner("Deploying…"):
                 ok, msg = shorten_and_deploy([{"short_code": code, "original_url": url}])
             if ok:
@@ -116,6 +127,7 @@ with tab1:
 
 # ── Google Sheet ──────────────────────────────────────────────────────────────
 with tab2:
+    publisher_batch = st.selectbox("Publisher", PUBLISHERS, key="pub_batch")
     st.caption("Sheet must be shared: File → Share → Anyone with the link → Viewer")
     sheet_input = st.text_input("Paste Google Sheet URL", placeholder="https://docs.google.com/spreadsheets/d/...")
 
@@ -159,7 +171,7 @@ with tab2:
                     blocked.append(url)
                     short_codes.append("BLOCKED")
                 else:
-                    code = make_short_code(url)
+                    code = make_short_code(url, publisher_batch)
                     entries.append({"short_code": code, "original_url": url})
                     short_codes.append(f"{PAGES_BASE}/{code}")
 
