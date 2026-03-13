@@ -62,7 +62,7 @@ This only needs to be done once. After that, every push to `data/urls.json` trig
 
 ### 3. Custom Domain (optional, recommended)
 
-Ask IT to add one DNS record:
+Request SysEng to add one DNS record:
 
 ```
 CNAME  links.kiddom.co  ->  pedagocode.github.io
