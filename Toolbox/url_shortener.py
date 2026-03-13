@@ -118,15 +118,24 @@ html, body {
 /* Top-right toolbar buttons (Fork, GitHub, menu) */
 [data-testid="stHeader"] button,
 [data-testid="stHeader"] a,
-[data-testid="stHeader"] svg,
+[data-testid="stHeader"] span,
 [data-testid="stToolbar"] button,
 [data-testid="stToolbar"] a,
-[data-testid="stToolbar"] svg,
 [data-testid="stToolbar"] span,
-[data-testid="stDecoration"] ~ header button,
-header[data-testid="stHeader"] * {
+[data-testid="stDecoration"] ~ header button {
     color: #242D2C !important;
+}
+/* Only fill the actual icon paths, not SVG containers */
+[data-testid="stHeader"] svg path,
+[data-testid="stHeader"] svg line,
+[data-testid="stHeader"] svg circle,
+[data-testid="stHeader"] svg polygon,
+[data-testid="stToolbar"] svg path,
+[data-testid="stToolbar"] svg line,
+[data-testid="stToolbar"] svg circle,
+[data-testid="stToolbar"] svg polygon {
     fill: #242D2C !important;
+    stroke: #242D2C !important;
 }
 [data-testid="stSidebar"] {
     background-color: #E5E8E7 !important;
@@ -197,6 +206,7 @@ header[data-testid="stHeader"] * {
 }
 .kiddom-header-text h1 {
     color: #FFFFFF !important;
+    font-family: 'Lexend', sans-serif !important;
     font-weight: 700;
     font-size: 1.8rem;
     margin: 0;
