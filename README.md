@@ -1,6 +1,6 @@
 # Kiddom ShortURL
 
-A Streamlit app for generating branded short links for Kiddom content URLs. Short links are deployed as static redirect pages via GitHub Pages.
+A Streamlit app for generating branded short links for Kiddom content URLs. Short links are deployed as static redirect pages via GitHub Pages. https://kiddom-shorturl.streamlit.app/
 
 ---
 
