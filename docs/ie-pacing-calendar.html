@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIDM.NY26.G6 — Pacing Calendar</title>
+<style>
+:root {
+  --c-bg: #f7f8fa;
+  --c-surface: #fff;
+  --c-border: #e0e3e8;
+  --c-text: #1a1d23;
+  --c-muted: #6b7280;
+  --c-u1: #4e79a7; --c-u1-light: #dce8f5;
+  --c-u2: #f28e2b; --c-u2-light: #fef0dc;
+  --c-u3: #e15759; --c-u3-light: #fde8e8;
+  --c-u4: #59a14f; --c-u4-light: #e2f2e0;
+  --c-u5: #76b7b2; --c-u5-light: #dff2f1;
+  --c-u6: #af7aa1; --c-u6-light: #f0e5ef;
+  --c-u7: #9c755f; --c-u7-light: #ede3dc;
+  --c-u8: #bab0ac; --c-u8-light: #f3f1f0;
+  --c-review: #16a34a; --c-review-light: #dcfce7;
+  --c-assess-mu: #7c3aed; --c-assess-eou: #4c1d95;
+  --c-violation: #dc2626; --c-violation-light: #fee2e2;
+  --c-combined: #92400e; --c-combined-light: #fef3c7;
+  --c-half: #d97706; --c-half-light: #fef9ee;
+  --c-regents: #0891b2; --c-regents-light: #e0f7fa;
+  --c-break: #f3f4f6; --c-break-text: #9ca3af;
+  --c-oor: #f9fafb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--c-bg); color: var(--c-text); font-size: 13px; }
+#app { max-width: 1200px; margin: 0 auto; padding: 16px 20px; }
+
+header { margin-bottom: 16px; }
+h1 { font-size: 18px; font-weight: 700; }
+.subtitle { color: var(--c-muted); font-size: 12px; margin-top: 2px; }
+
+.tabs { display: flex; gap: 4px; margin-top: 14px; border-bottom: 2px solid var(--c-border); padding-bottom: 0; }
+.tab { padding: 8px 18px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--c-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; border-radius: 4px 4px 0 0; }
+.tab:hover { background: #f0f2f5; color: var(--c-text); }
+.tab.active { color: var(--c-text); border-bottom-color: var(--c-text); font-weight: 600; }
+
+#view-desc { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 6px; padding: 12px 16px; margin: 14px 0 12px; font-size: 12px; color: var(--c-muted); line-height: 1.6; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--c-muted); }
+.legend-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); flex-shrink: 0; }
+
+.cal { width: 100%; }
+
+/* Week/Unit headers */
+.unit-header { display: grid; grid-template-columns: 52px repeat(5,1fr); gap: 2px; margin: 16px 0 4px; }
+.unit-header-cell { grid-column: 2 / -1; padding: 6px 10px; border-radius: 4px; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
+.unit-meta { font-weight: 400; color: rgba(255,255,255,.75); font-size: 11px; }
+.unit-header-cell.u1 { background: var(--c-u1); color: #fff; }
+.unit-header-cell.u2 { background: var(--c-u2); color: #fff; }
+.unit-header-cell.u3 { background: var(--c-u3); color: #fff; }
+.unit-header-cell.u4 { background: var(--c-u4); color: #fff; }
+.unit-header-cell.u5 { background: var(--c-u5); color: #fff; }
+.unit-header-cell.u6 { background: var(--c-u6); color: #fff; }
+.unit-header-cell.u7 { background: var(--c-u7); color: #fff; }
+.unit-header-cell.u8 { background: var(--c-u8); color: var(--c-text); }
+.unit-header-cell.u9 { background: #9ca3af; color: #fff; }
+
+/* Week rows */
+.week-row { display: grid; grid-template-columns: 52px repeat(5,1fr); gap: 2px; margin-bottom: 2px; }
+.week-label { display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 10px; color: var(--c-muted); font-weight: 500; line-height: 1.2; text-align: right; }
+.col-headers { display: grid; grid-template-columns: 52px repeat(5,1fr); gap: 2px; margin-bottom: 4px; }
+.col-header { text-align: center; font-size: 10px; font-weight: 600; color: var(--c-muted); text-transform: uppercase; padding: 2px; }
+
+/* Day cells */
+.day { min-height: 64px; border-radius: 4px; padding: 5px 6px; position: relative; border: 1.5px solid transparent; display: flex; flex-direction: column; gap: 2px; }
+.day-date { font-size: 10px; color: var(--c-muted); font-weight: 500; }
+.day-label { font-size: 11px; font-weight: 600; line-height: 1.3; }
+.day-title { font-size: 10.5px; color: var(--c-muted); line-height: 1.3; }
+.day-badge { font-size: 9px; padding: 1px 4px; border-radius: 10px; background: rgba(0,0,0,.07); color: var(--c-muted); margin-top: auto; align-self: flex-start; }
+
+/* Cell types */
+.day.oor { background: var(--c-oor); }
+.day.break { background: var(--c-break); }
+.day.break .day-label { color: var(--c-break-text); font-size: 10px; font-weight: 400; }
+.day.half-day { background: var(--c-half-light); border-color: var(--c-half); }
+.day.half-day .day-label { color: var(--c-half); }
+.day.regents { background: var(--c-regents-light); border-color: var(--c-regents); }
+.day.regents .day-label { color: var(--c-regents); font-size: 10px; }
+.day.buffer { background: #f9fafb; border-color: #e5e7eb; border-style: dashed; }
+.day.buffer .day-label { color: #d1d5db; font-size: 10px; }
+.day.firstday, .day.lastday { border-color: #fbbf24 !important; }
+.day.firstday .day-date::after { content: ' ★'; color: #f59e0b; }
+
+/* Lessons */
+.day.lesson { background: var(--c-surface); border-color: var(--c-border); }
+.day.lesson.u1 { border-left: 3px solid var(--c-u1); }
+.day.lesson.u2 { border-left: 3px solid var(--c-u2); }
+.day.lesson.u3 { border-left: 3px solid var(--c-u3); }
+.day.lesson.u4 { border-left: 3px solid var(--c-u4); }
+.day.lesson.u5 { border-left: 3px solid var(--c-u5); }
+.day.lesson.u6 { border-left: 3px solid var(--c-u6); }
+.day.lesson.u7 { border-left: 3px solid var(--c-u7); }
+.day.lesson.u8 { border-left: 3px solid var(--c-u8); }
+.day.lesson.u9 { border-left: 3px solid #9ca3af; }
+
+/* Optional lessons (original view) */
+.day.optional { opacity: .6; }
+.day.optional .day-label { text-decoration: line-through; text-decoration-color: rgba(0,0,0,.3); }
+.opt-tag { font-size: 9px; background: #fef9c3; color: #854d0e; border-radius: 3px; padding: 1px 4px; margin-top: 1px; align-self: flex-start; }
+
+/* Review days */
+.day.review { background: var(--c-review-light); border-color: var(--c-review); }
+.day.review .day-label { color: var(--c-review); font-size: 10.5px; }
+
+/* Assessments */
+.day.assess-mu { background: #ede9fe; border-color: var(--c-assess-mu); }
+.day.assess-mu .day-label { color: var(--c-assess-mu); }
+.day.assess-eou { background: #ddd6fe; border-color: var(--c-assess-eou); }
+.day.assess-eou .day-label { color: var(--c-assess-eou); }
+
+/* Violations */
+.day.violation { background: var(--c-violation-light) !important; border-color: var(--c-violation) !important; border-width: 2px !important; }
+.day.violation .day-label { color: var(--c-violation); }
+.violation-tag { font-size: 9px; background: var(--c-violation); color: #fff; border-radius: 3px; padding: 1px 4px; align-self: flex-start; }
+
+/* Combined lessons */
+.day.combined { background: var(--c-combined-light); border-color: var(--c-combined); border-width: 2px; }
+.day.combined .day-label { color: var(--c-combined); }
+.combined-tag { font-size: 9px; background: var(--c-combined); color: #fff; border-radius: 3px; padding: 1px 4px; align-self: flex-start; }
+.taxonomy-tag { font-size: 9px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 3px; padding: 1px 4px; }
+.load-tag { font-size: 9px; background: #fef9c3; color: #854d0e; border: 1px solid #fde047; border-radius: 3px; padding: 1px 4px; }
+
+/* Why combined */
+.why-btn { background:none; border:none; padding:0; cursor:pointer; font-size:9px; font-weight:600; color:var(--c-combined); display:inline-flex; align-items:center; gap:2px; margin-top:3px; line-height:1; }
+.why-btn:hover { text-decoration:underline; }
+.why-chev { display:inline-block; transition:transform 0.15s; }
+.why-btn.open .why-chev { transform:rotate(180deg); }
+.why-panel { display:none; border-top:2px solid var(--c-combined); background:var(--c-combined-light); padding:12px 16px; margin-bottom:2px; font-size:12px; line-height:1.6; }
+.why-panel.open { display:block; }
+.unit-header-cell.collapsible { cursor:pointer; user-select:none; }
+.unit-header-cell.collapsible:hover { filter:brightness(0.92); }
+.unit-chev { font-size:11px; opacity:0.75; display:inline-block; transition:transform 0.15s; }
+.unit-header-cell.collapsed .unit-chev { transform:rotate(-90deg); }
+.unit-weeks.collapsed { display:none; }
+
+/* Resolved flag */
+.day.resolved { outline: 2px solid var(--c-review); outline-offset: 1px; }
+.resolved-tag { font-size: 9px; background: var(--c-review); color: #fff; border-radius: 3px; padding: 1px 4px; align-self: flex-start; }
+
+/* Last day of school / overflow */
+.lastday-tag { font-size: 9px; background: #dc2626; color: #fff; border-radius: 3px; padding: 1px 4px; align-self: flex-start; }
+.day.lastday-boundary { border-bottom: 3px solid #dc2626 !important; }
+.day.overflow-lesson { background: #fef2f2; border: 1px solid #fecaca; border-left: 3px solid #dc2626; }
+.day.overflow-lesson .day-label { color: #991b1b; }
+
+.stats-bar { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: flex; gap: 20px; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; }
+.stat-val { font-size: 18px; font-weight: 700; }
+.stat-lbl { font-size: 10px; color: var(--c-muted); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>IM® v.360 NY 2026 — Grade 6 Math Pacing Calendar</h1>
+    <p class="subtitle">KIDM.NY26.G6 &nbsp;·&nbsp; NYCPS 2026–27 &nbsp;·&nbsp; 164 lesson-placement days &nbsp;·&nbsp; Trace generated 2026-06-29</p>
+    <div class="tabs">
+      <button class="tab active" onclick="setView('original')">Original</button>
+      <button class="tab" onclick="setView('pacing')">Pacing Calendar</button>
+      <button class="tab" onclick="setView('adjustments')">Adjustments — Round 1</button>
+      <button class="tab" onclick="setView('round2')">Adjustments — Round 2</button>
+      <button class="tab" onclick="setView('round3')">Adjustments — Round 3</button>
+      <button class="tab" onclick="setView('round4')">Final Adjustments</button>
+    </div>
+  </header>
+  <div id="view-desc"></div>
+  <div id="stats-bar"></div>
+  <div id="legend"></div>
+  <div id="calendar"></div>
+</div>
+
+<script>
+// ─── Calendar constants ────────────────────────────────────────────────────
+
+const NON_INSTR = new Set([
+  '2026-09-10',
+  '2026-09-21','2026-10-12','2026-11-11','2026-11-26','2026-11-27',
+  '2026-12-24','2026-12-25','2026-12-28','2026-12-29','2026-12-30','2026-12-31',
+  '2027-01-01','2027-01-18',
+  '2027-02-15','2027-02-16','2027-02-17','2027-02-18','2027-02-19',
+  '2027-03-09','2027-03-26',
+  '2027-04-22','2027-04-23','2027-04-26','2027-04-27','2027-04-28','2027-04-29','2027-04-30',
+  '2027-05-17','2027-05-31',
+  '2027-06-08','2027-06-10',
+]);
+
+const BREAK_LABELS = {
+  '2026-09-10':'First Day of School',
+  '2026-09-21':'Yom Kippur','2026-10-12':'Italian Heritage Day','2026-11-11':'Veterans Day',
+  '2026-11-26':'Thanksgiving','2026-11-27':'Thanksgiving Recess',
+  '2026-12-24':'Winter Recess','2026-12-25':'Winter Recess','2026-12-28':'Winter Recess',
+  '2026-12-29':'Winter Recess','2026-12-30':'Winter Recess','2026-12-31':'Winter Recess',
+  '2027-01-01':"New Year's Day",'2027-01-18':'MLK Jr. Day',
+  '2027-02-15':'Midwinter Recess','2027-02-16':'Midwinter Recess','2027-02-17':'Midwinter Recess',
+  '2027-02-18':'Midwinter Recess','2027-02-19':'Midwinter Recess',
+  '2027-03-09':'Eid al-Fitr','2027-03-26':'Good Friday',
+  '2027-04-22':'Spring Recess','2027-04-23':'Spring Recess','2027-04-26':'Spring Recess',
+  '2027-04-27':'Spring Recess','2027-04-28':'Spring Recess','2027-04-29':'Spring Recess',
+  '2027-04-30':'Spring Recess',
+  '2027-05-17':'Eid al-Adha','2027-05-31':'Memorial Day',
+  '2027-06-08':'Clerical Day','2027-06-10':'Anniversary Day',
+};
+
+const HALF_DAYS = new Set(['2026-11-12','2027-03-04']);
+
+const REGENTS = new Set([
+  '2027-06-15','2027-06-16','2027-06-17','2027-06-18',
+  '2027-06-21','2027-06-22','2027-06-23','2027-06-24','2027-06-25',
+]);
+
+const SCHOOL_START = '2026-09-10';
+const SCHOOL_END   = '2027-06-28';
+const DOW_NAMES = ['Mon','Tue','Wed','Thu','Fri'];
+
+function buildSlots() {
+  const slots = [];
+  let d = new Date('2026-09-14T12:00:00Z');
+  const end = new Date('2027-06-29T12:00:00Z');
+  while (d < end) {
+    const ds = d.toISOString().slice(0,10);
+    const dow = d.getUTCDay();
+    if (dow !== 0 && dow !== 6 && !NON_INSTR.has(ds) && !HALF_DAYS.has(ds) && !REGENTS.has(ds)) {
+      slots.push(ds);
+    }
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return slots;
+}
+
+const SLOTS = buildSlots(); // 166 lesson-placement dates
+
+function fmtDate(ds) {
+  const [y,m,d] = ds.split('-');
+  const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[+m]} ${+d}`;
+}
+function fmtShort(ds) {
+  const [y,m,d] = ds.split('-');
+  return `${+m}/${+d}`;
+}
+
+// ─── Curriculum data (corrected Phase 1 optionals) ─────────────────────────
+
+// opt flags marked CORRECTED where they differ from JSON optional_lessons array
+const UNITS = [
+  { id:1, title:'Area and Surface Area', hasMU:true, hasEoU:true,
+    sections:[
+      { id:'A', title:'Reasoning to Find Area', ckpt:true, lessons:[
+        {n:1,t:'Tiling the Plane',opt:false},
+        {n:2,t:'Finding Area by Decomposing and Rearranging',opt:false},
+        {n:3,t:'Reasoning to Find Area',opt:false},
+      ]},
+      { id:'B', title:'Parallelograms', ckpt:true, lessons:[
+        {n:4,t:'Parallelograms',opt:false},
+        {n:5,t:'Bases and Heights of Parallelograms',opt:false},
+        {n:6,t:'Area of Parallelograms',opt:false},
+      ]},
+      { id:'C', title:'Triangles and Other Polygons', ckpt:true, muAfter:true, lessons:[
+        {n:7,t:'From Parallelograms to Triangles',opt:false},
+        {n:8,t:'Area of Triangles',opt:false},
+        {n:9,t:'Formula for the Area of a Triangle',opt:false},
+        {n:10,t:'Bases and Heights of Triangles',opt:false},
+        {n:11,t:'Polygons',opt:false},
+      ]},
+      { id:'D', title:'Surface Area', ckpt:true, lessons:[
+        {n:12,t:'What is Surface Area?',opt:false},
+        {n:13,t:'Polyhedra',opt:false},
+        {n:14,t:'Nets and Surface Area',opt:false},
+        {n:15,t:'More Nets, More Surface Area',opt:false},
+        {n:16,t:'Distinguishing Between Surface Area and Volume',opt:true}, // CORRECTED
+      ]},
+      { id:'E', title:'Squares and Cubes', ckpt:true, lessons:[
+        {n:17,t:'Squares and Cubes',opt:false},
+        {n:18,t:'Surface Area of a Cube',opt:false},
+      ]},
+      { id:'F', title:"Let's Put it to Work", lpw:true, lessons:[
+        {n:19,t:'All about Tents',opt:true},
+      ]},
+    ]
+  },
+  { id:2, title:'Introducing Ratios', hasMU:false, hasEoU:true,
+    sections:[
+      { id:'A', title:'What are Ratios?', ckpt:true, lessons:[
+        {n:1,t:'Introducing Ratios and Ratio Language',opt:false},
+        {n:2,t:'Representing Ratios with Diagrams',opt:false},
+      ]},
+      { id:'B', title:'Equivalent Ratios', ckpt:true, lessons:[
+        {n:3,t:'Recipes',opt:false},
+        {n:4,t:'Color Mixtures',opt:false},
+        {n:5,t:'Defining Equivalent Ratios',opt:false},
+      ]},
+      { id:'C', title:'Representing Equivalent Ratios', ckpt:true, lessons:[
+        {n:6,t:'Introducing Double Number Line Diagrams',opt:false},
+        {n:7,t:'Creating Double Number Line Diagrams',opt:false},
+        {n:8,t:'How Much for One?',opt:false},
+        {n:9,t:'Constant Speed',opt:false},
+        {n:10,t:'Comparing Situations by Examining Ratios',opt:false},
+      ]},
+      { id:'D', title:'Solving Ratio and Rate Problems', ckpt:true, lessons:[
+        {n:11,t:'Representing Ratios with Tables',opt:false},
+        {n:12,t:'Navigating a Table of Equivalent Ratios',opt:false},
+        {n:13,t:'Tables and Double Number Line Diagrams',opt:false},
+        {n:14,t:'Solving Equivalent Ratio Problems',opt:false},
+      ]},
+      { id:'E', title:'Part-part-whole Ratios', ckpt:true, lessons:[
+        {n:15,t:'Part-Part-Whole Ratios',opt:false},
+        {n:16,t:'Solving More Ratio Problems',opt:false},
+      ]},
+      { id:'F', title:"Let's Put it to Work", lpw:true, lessons:[
+        {n:17,t:'A Fermi Problem',opt:false}, // NOT optional — confirmed
+      ]},
+    ]
+  },
+  { id:3, title:'Unit Rates and Percentages', hasMU:false, hasEoU:true,
+    sections:[
+      { id:'A', title:'Units of Measurement and Unit Conversion', ckpt:true, lessons:[
+        {n:1,t:'Anchoring Units of Measurement',opt:false},
+        {n:2,t:'Measuring with Different-Size Units',opt:true},
+        {n:3,t:'Converting Units',opt:false},
+      ]},
+      { id:'B', title:'Rates', ckpt:true, lessons:[
+        {n:4,t:'Comparing Speeds and Prices',opt:false},
+        {n:5,t:'Interpreting Rates',opt:false},
+        {n:6,t:'Equivalent Ratios Have the Same Unit Rates',opt:false},
+        {n:7,t:'More Rate Comparisons',opt:false},
+        {n:8,t:'Solving Rate Problems',opt:false},
+        {n:9,t:'More about Constant Speed',opt:true},
+      ]},
+      { id:'C', title:'Percentages', ckpt:true, lessons:[
+        {n:10,t:'What Are Percentages?',opt:false},
+        {n:11,t:'Representing Percentages with Double Number Line Diagrams',opt:false},
+        {n:12,t:'Representing Percentages in Different Ways',opt:false},
+        {n:13,t:'Benchmark Percentages',opt:false},
+        {n:14,t:'Solving Percentage Problems',opt:false},
+        {n:15,t:'Finding This Percent of That',opt:false},
+        {n:16,t:'Finding the Percentage',opt:true},
+      ]},
+      { id:'D', title:"Let's Put it to Work", lpw:true, lessons:[
+        {n:17,t:'Painting a Room',opt:false}, // NOT optional — confirmed
+      ]},
+    ]
+  },
+  { id:4, title:'Dividing Fractions', hasMU:true, hasEoU:true,
+    sections:[
+      { id:'A', title:'Making Sense of Division', ckpt:true, lessons:[
+        {n:1,t:'Size of Divisor and Size of Quotient',opt:false},
+        {n:2,t:'Meanings of Division',opt:false},
+        {n:3,t:'Interpreting Division Situations',opt:true}, // CORRECTED: Sec A overview "last lesson optional"
+      ]},
+      { id:'B', title:'Meanings of Fraction Division', ckpt:true, muAfter:true, lessons:[
+        {n:4,t:'How Many Groups? (Part 1)',opt:true}, // CORRECTED: lesson narrative
+        {n:5,t:'How Many Groups? (Part 2)',opt:false},
+        {n:6,t:'Using Diagrams to Find the Number of Groups',opt:false},
+        {n:7,t:'What Fraction of a Group?',opt:false},
+        {n:8,t:'How Much in Each Group? (Part 1)',opt:false},
+        {n:9,t:'How Much in Each Group? (Part 2)',opt:false},
+      ]},
+      { id:'C', title:'Algorithm for Fraction Division', ckpt:true, lessons:[
+        {n:10,t:'Dividing by Unit and Non-Unit Fractions',opt:false},
+        {n:11,t:'Using an Algorithm to Divide Fractions',opt:false},
+      ]},
+      { id:'D', title:'Fractions in Lengths, Areas, and Volumes', ckpt:true, lessons:[
+        {n:12,t:'Fractional Lengths',opt:false},
+        {n:13,t:'Rectangles with Fractional Side Lengths',opt:false},
+        {n:14,t:'Fractional Lengths in Triangles and Prisms',opt:false},
+        {n:15,t:'Volume of Prisms',opt:false},
+      ]},
+      { id:'E', title:"Let's Put It to Work", lpw:true, lessons:[
+        {n:16,t:'Solving Problems Involving Fractions',opt:true},
+        {n:17,t:'Fitting Boxes into Boxes',opt:false},
+      ]},
+    ]
+  },
+  { id:5, title:'Arithmetic in Base Ten', hasMU:true, hasEoU:true,
+    sections:[
+      { id:'A', title:'Exploring, Adding, and Subtracting Decimals', ckpt:true, lessons:[
+        {n:1,t:'Using Decimals in a Shopping Context',opt:false},
+        {n:2,t:'Using Diagrams to Represent Addition and Subtraction',opt:true},
+        {n:3,t:'Adding and Subtracting Decimals with Few Non-Zero Digits',opt:false},
+        {n:4,t:'Adding and Subtracting Decimals with Many Non-Zero Digits',opt:false},
+      ]},
+      { id:'B', title:'Multiplying Decimals', ckpt:true, muAfter:true, lessons:[
+        {n:5,t:'Using Fractions to Multiply Decimals',opt:false},
+        {n:6,t:'Methods for Multiplying Decimals',opt:false},
+        {n:7,t:'Using Diagrams to Represent Multiplication',opt:false},
+        {n:8,t:'Calculating Products of Decimals',opt:false},
+      ]},
+      { id:'C', title:'Dividing Decimals', ckpt:true, lessons:[
+        {n:9,t:'Using Base-Ten Diagrams to Divide',opt:true},
+        {n:10,t:'Using Partial Quotients',opt:false},
+        {n:11,t:'Using Long Division',opt:false},
+        {n:12,t:'Dividing Numbers that Result in a Decimal',opt:false},
+        {n:13,t:'Dividing a Decimal by a Decimal',opt:false},
+      ]},
+      { id:'D', title:"Let's Put It to Work", lpw:true, lessons:[
+        {n:14,t:'Solving Problems Involving Decimals',opt:false},
+        {n:15,t:'Making and Measuring Boxes',opt:true},
+      ]},
+    ]
+  },
+  { id:6, title:'Expressions and Equations', hasMU:true, hasEoU:true,
+    sections:[
+      { id:'A', title:'Equations in One Variable', ckpt:true, lessons:[
+        {n:1,t:'Tape Diagrams and Equations',opt:false},
+        {n:2,t:'Truth and Equations',opt:false},
+        {n:3,t:'Staying in Balance',opt:false},
+        {n:4,t:'Practice Solving Equations',opt:false},
+        {n:5,t:'Represent Situations with Equations',opt:false},
+        {n:6,t:'Percentages and Equations',opt:false},
+      ]},
+      { id:'B', title:'Equal and Equivalent', ckpt:true, muAfter:true, lessons:[
+        {n:7,t:'Write Expressions with Variables',opt:false},
+        {n:8,t:'Equal and Equivalent',opt:false},
+        {n:9,t:'The Distributive Property, Part 1',opt:false},
+        {n:10,t:'The Distributive Property, Part 2',opt:false},
+        {n:11,t:'The Distributive Property, Part 3',opt:true}, // CORRECTED
+      ]},
+      { id:'C', title:'Expressions with Exponents', ckpt:true, lessons:[
+        {n:12,t:'Meaning of Exponents',opt:false},
+        {n:13,t:'Expressions with Exponents',opt:false},
+        {n:14,t:'Evaluating Expressions with Exponents',opt:false},
+        {n:15,t:'Equivalent Exponential Expressions',opt:false},
+      ]},
+      { id:'D', title:'Relationships Between Quantities', ckpt:true, lessons:[
+        {n:16,t:'Two Related Quantities, Part 1',opt:false},
+        {n:17,t:'Two Related Quantities, Part 2',opt:false},
+        {n:18,t:'More Relationships',opt:true}, // CORRECTED
+      ]},
+      { id:'E', title:"Let's Put it to Work", lpw:true, lessons:[
+        {n:19,t:'Tables, Equations, and Graphs, Oh My!',opt:false},
+      ]},
+    ]
+  },
+  { id:7, title:'Rational Numbers', hasMU:false, hasEoU:true,
+    sections:[
+      { id:'A', title:'Negative Numbers and Absolute Value', ckpt:true, lessons:[
+        {n:1,t:'Positive and Negative Numbers',opt:false},
+        {n:2,t:'Points on the Number Line',opt:false},
+        {n:3,t:'Comparing Positive and Negative Numbers',opt:false},
+        {n:4,t:'Ordering Rational Numbers',opt:false},
+        {n:5,t:'Using Negative Numbers to Make Sense of Contexts',opt:false},
+        {n:6,t:'Absolute Value of Numbers',opt:false},
+        {n:7,t:'Comparing Numbers and Distance from Zero',opt:false},
+      ]},
+      { id:'B', title:'Inequalities', ckpt:true, lessons:[
+        {n:8,t:'Writing and Graphing Inequalities',opt:false},
+        {n:9,t:'Solutions of Inequalities',opt:false},
+        {n:10,t:'Interpreting Inequalities',opt:false},
+      ]},
+      { id:'C', title:'The Coordinate Plane', ckpt:true, lessons:[
+        {n:11,t:'Points in the Coordinate Plane',opt:false},
+        {n:12,t:'Constructing the Coordinate Plane',opt:false},
+        {n:13,t:'Interpreting Points in a Coordinate Plane',opt:false},
+        {n:14,t:'Distances in the Coordinate Plane',opt:false},
+        {n:15,t:'Shapes in the Coordinate Plane',opt:false},
+      ]},
+      { id:'D', title:'Common Factors and Common Multiples', ckpt:true, lessons:[
+        {n:16,t:'Common Factors',opt:false},
+        {n:17,t:'Common Multiples',opt:false},
+        {n:18,t:'Using Common Multiples and Common Factors',opt:false},
+      ]},
+      { id:'E', title:"Let's Put It to Work", lpw:true, lessons:[
+        {n:19,t:'Drawing in the Coordinate Plane',opt:true},
+      ]},
+    ]
+  },
+  { id:8, title:'Data Sets and Distributions', hasMU:true, hasEoU:true,
+    sections:[
+      { id:'A', title:'Data, Variability, and Statistical Questions', ckpt:true, lessons:[
+        {n:1,t:'Got Data?',opt:false},
+        {n:2,t:'Statistical Questions',opt:false},
+      ]},
+      { id:'B', title:'Dot Plots and Histograms', ckpt:true, lessons:[
+        {n:3,t:'Representing Data Graphically',opt:false},
+        {n:4,t:'Dot Plots',opt:false},
+        {n:5,t:'Using Dot Plots to Answer Statistical Questions',opt:false},
+        {n:6,t:'Interpreting Histograms',opt:false},
+        {n:7,t:'Using Histograms to Answer Statistical Questions',opt:false},
+        {n:8,t:'Describing Distributions on Histograms',opt:false},
+      ]},
+      { id:'C', title:'Measures of Center and Variability', ckpt:true, muAfter:true, lessons:[
+        {n:9,t:'Mean',opt:false},
+        {n:10,t:'Finding and Interpreting the Mean as the Balance Point',opt:false},
+        {n:11,t:'Variability and MAD',opt:false},
+        {n:12,t:'Using Mean and MAD to Make Comparisons',opt:false},
+      ]},
+      { id:'D', title:'Median and IQR', ckpt:true, lessons:[
+        {n:13,t:'Median',opt:false},
+        {n:14,t:'Comparing Mean and Median',opt:false},
+        {n:15,t:'Quartiles and Interquartile Range',opt:false},
+        {n:16,t:'Box Plots',opt:false},
+        {n:17,t:'Using Box Plots',opt:false},
+      ]},
+      { id:'E', title:"Let's Put it to Work", lpw:true, lessons:[
+        {n:18,t:'Using Data to Solve Problems',opt:true},
+      ]},
+    ]
+  },
+  { id:9, title:'Putting It All Together', hasMU:false, hasEoU:false,
+    sections:[
+      { id:'A', title:'Exploring Our World', lpw:true, lessons:[
+        {n:1,t:'Fermi Problems',opt:true},
+        {n:2,t:'Energy Flow',opt:true},
+        {n:3,t:'Making Paper',opt:true},
+        {n:4,t:'If Our Class Were the World',opt:true},
+      ]},
+      { id:'B', title:'Voting', lpw:true, lessons:[
+        {n:5,t:'How Do We Choose?',opt:true},
+        {n:6,t:'More than Two Choices',opt:true},
+        {n:7,t:'Comparing Voting Systems',opt:true},
+        {n:8,t:'Picking Representatives',opt:true},
+        {n:9,t:'Designing Districts',opt:true},
+      ]},
+      { id:'C', title:'Making Connections', lpw:true, lessons:[
+        {n:10,t:'Rectangle Madness',opt:true},
+        {n:11,t:'Rectangle Fractions',opt:true},
+      ]},
+    ]
+  },
+];
+
+// ─── Event builders ────────────────────────────────────────────────────────
+
+function buildEvents(view) {
+  const isOrig    = view === 'original';
+  const isAdj     = view === 'adjustments';
+  const isRound2  = view === 'round2';
+  const isRound3  = view === 'round3';
+  const isRound4  = view === 'round4';
+  const events = [];
+
+  for (const unit of UNITS) {
+    if (!isOrig && unit.id === 9) continue;
+
+    for (const sec of unit.sections) {
+      const allL = sec.lessons;
+      const viewL = isOrig ? allL : allL.filter(l => !l.opt);
+      const totalInView = viewL.length;
+
+      for (let vi = 0; vi < viewL.length; vi++) {
+        const l = viewL[vi];
+
+        // All adjustment rounds: combine U4 L8+L9 (fixes Dec 18 Fri → Dec 21 Mon violation)
+        if ((isAdj || isRound2 || isRound3 || isRound4) && unit.id === 4 && l.n === 8) {
+          const l9 = allL.find(x => x.n === 9);
+          events.push({
+            type:'combined', unit:4, unitTitle:unit.title, sec:sec.id,
+            n:8, n2:9, t:l.t, t2:l9.t,
+            badge:'Sec B · 4+5/5 ✓',
+            taxonomy:'guided_practice + independent_practice',
+            cogLoad:'medium',
+            hasWhy: true,
+          });
+          continue;
+        }
+        if ((isAdj || isRound2 || isRound3 || isRound4) && unit.id === 4 && l.n === 9) continue;
+
+        // Round2+: combine U4 L1+L2 (pre-MU pair; resolves EoU Jan 8→11 within 55-min limit; L14+L15 excluded at 75 min)
+        if ((isRound2 || isRound3 || isRound4) && unit.id === 4 && l.n === 1) {
+          const l2 = allL.find(x => x.n === 2);
+          events.push({
+            type:'combined', unit:4, unitTitle:unit.title, sec:sec.id,
+            n:1, n2:2, t:l.t, t2:l2.t,
+            badge:'Sec A · 1+2/2 ✓',
+            taxonomy:'exploration + formal concepts',
+            cogLoad:'low',
+            hasWhy: true,
+          });
+          continue;
+        }
+        if ((isRound2 || isRound3 || isRound4) && unit.id === 4 && l.n === 2) continue;
+
+
+        // Round3 + Round4: combine U7 L17+L18 (fixes U7 EoU Apr 9→12 violation)
+        if ((isRound3 || isRound4) && unit.id === 7 && l.n === 17) {
+          const l18 = allL.find(x => x.n === 18);
+          events.push({
+            type:'combined', unit:7, unitTitle:unit.title, sec:sec.id,
+            n:17, n2:18, t:l.t, t2:l18.t,
+            badge:'Sec D · 2+3/3 ✓',
+            taxonomy:'sense_making + application',
+            cogLoad:'medium',
+            hasWhy: true,
+          });
+          continue;
+        }
+        if ((isRound3 || isRound4) && unit.id === 7 && l.n === 18) continue;
+
+        // Round4 only: combine U8 L9+L10 (fixes U8 MU May 7→10 violation)
+        if (isRound4 && unit.id === 8 && l.n === 9) {
+          const l10 = allL.find(x => x.n === 10);
+          events.push({
+            type:'combined', unit:8, unitTitle:unit.title, sec:sec.id,
+            n:9, n2:10, t:l.t, t2:l10.t,
+            badge:'Sec C · 1+2/4 ✓',
+            taxonomy:'sense_making + sense_making',
+            cogLoad:'medium',
+            hasWhy: true,
+          });
+          continue;
+        }
+        if (isRound4 && unit.id === 8 && l.n === 10) continue;
+
+        const badge = `Sec ${sec.id} · ${vi+1}/${totalInView}${sec.ckpt ? ' ✓':''} `;
+        events.push({
+          type:'lesson', unit:unit.id, unitTitle:unit.title, sec:sec.id,
+          n:l.n, t:l.t, opt:l.opt, badge,
+        });
+      }
+
+      if (sec.muAfter && unit.hasMU) {
+        if (!isOrig) events.push({type:'review', unit:unit.id, assessType:'mu', label:'Review — Mid-Unit Assessment'});
+        events.push({type:'assessment', unit:unit.id, assessType:'mu', label:'Mid-Unit Assessment'});
+      }
+    }
+
+    if (unit.hasEoU) {
+      if (!isOrig) events.push({type:'review', unit:unit.id, assessType:'eou', label:'Review — End-of-Unit Assessment'});
+      events.push({type:'assessment', unit:unit.id, assessType:'eou', label:'End-of-Unit Assessment'});
+    }
+  }
+
+  return events;
+}
+
+// After building the event sequence, detect any review→assess pairs that are not
+// consecutive calendar days and flag them as violations.
+function detectViolations(events, view) {
+  for (let i = 0; i < events.length - 1; i++) {
+    if (events[i].type === 'review' && events[i+1].type === 'assessment') {
+      const d1 = SLOTS[i], d2 = SLOTS[i+1];
+      if (!d1 || !d2) continue;
+      const diff = (new Date(d2+'T12:00:00Z') - new Date(d1+'T12:00:00Z')) / 86400000;
+      if (diff !== 1) {
+        events[i].violation = true;
+        events[i+1].violation = true;
+        // Any violation detected in adjustments/round2+ is new (prior ones were resolved)
+        if (view === 'adjustments' || view === 'round2' || view === 'round3' || view === 'round4') {
+          events[i].newViolation = true;
+          events[i+1].newViolation = true;
+        }
+      }
+    }
+  }
+}
+
+// ─── Date mapping ──────────────────────────────────────────────────────────
+
+function buildEventMap(events) {
+  const map = {};
+  for (let i = 0; i < events.length && i < SLOTS.length; i++) {
+    map[SLOTS[i]] = events[i];
+  }
+  return map;
+}
+
+function getUnitBoundaries(eventMap) {
+  // Returns {unitId: {start: date, end: date, count: n}}
+  const bounds = {};
+  const unitDates = {};
+  for (const [date, ev] of Object.entries(eventMap)) {
+    const u = ev.unit;
+    if (!unitDates[u]) unitDates[u] = [];
+    unitDates[u].push(date);
+  }
+  for (const [u, dates] of Object.entries(unitDates)) {
+    dates.sort();
+    const instr = dates.filter(d => {
+      const ev = eventMap[d];
+      return ev.type === 'lesson' || ev.type === 'combined';
+    });
+    bounds[u] = { start: dates[0], end: dates[dates.length-1], count: instr.length };
+  }
+  return bounds;
+}
+
+// Assign every school weekday to the unit whose last event preceded it
+function buildDateToUnit(eventMap) {
+  const map = {};
+  for (const [d, ev] of Object.entries(eventMap)) map[d] = ev.unit;
+  // Seed orientation days (before first lesson slot) into U1 so the opening week renders
+  if (SLOTS[0] > '2026-09-10') {
+    let pre = new Date('2026-09-10T12:00:00Z');
+    const firstLesson = new Date(SLOTS[0] + 'T12:00:00Z');
+    while (pre < firstLesson) {
+      const ds = pre.toISOString().slice(0,10);
+      const dow = pre.getUTCDay();
+      if (dow >= 1 && dow <= 5) map[ds] = 1;
+      pre.setUTCDate(pre.getUTCDate() + 1);
+    }
+  }
+  let cur = new Date('2026-09-10T12:00:00Z');
+  const stop = new Date('2027-06-29T12:00:00Z');
+  let last = null;
+  while (cur < stop) {
+    const ds = cur.toISOString().slice(0,10);
+    const dow = cur.getUTCDay();
+    if (dow >= 1 && dow <= 5) {
+      if (map[ds]) last = map[ds];
+      else if (last !== null) map[ds] = last;
+    }
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return map;
+}
+
+// ─── Renderer ─────────────────────────────────────────────────────────────
+
+const UNIT_COLORS = {1:'u1',2:'u2',3:'u3',4:'u4',5:'u5',6:'u6',7:'u7',8:'u8',9:'u9'};
+
+function renderDayCell(date, eventMap, view) {
+  const ev = eventMap[date];
+  const dow = new Date(date + 'T12:00:00Z').getUTCDay(); // 1=Mon, 5=Fri
+  const dateLabel = `<span class="day-date">${fmtShort(date)} ${DOW_NAMES[dow-1]}</span>`;
+
+  // Overflow lesson (past school year) — must come before date-range guard
+  if (ev && ev.overflow) {
+    const optTag = ev.opt ? `<span class="opt-tag">optional</span>` : '';
+    return `<div class="day overflow-lesson">${dateLabel}<span class="day-label">L${ev.n}. ${ev.t}</span>${optTag}<span class="lastday-tag">Past School Year</span><span class="day-badge">${ev.badge}</span></div>`;
+  }
+
+  // Special days
+  if (date < SCHOOL_START || date > SCHOOL_END) {
+    return `<div class="day oor">${dateLabel}</div>`;
+  }
+  if (NON_INSTR.has(date)) {
+    return `<div class="day break">${dateLabel}<span class="day-label">${BREAK_LABELS[date]||'No School'}</span></div>`;
+  }
+  if (HALF_DAYS.has(date)) {
+    return `<div class="day half-day">${dateLabel}<span class="day-label">Parent-Teacher Conf.</span><span class="day-title">Half Day — no instruction</span></div>`;
+  }
+  if (REGENTS.has(date)) {
+    return `<div class="day regents">${dateLabel}<span class="day-label">Regents Administration</span></div>`;
+  }
+  if (date === SCHOOL_START) {
+    if (!ev) return `<div class="day firstday lesson">${dateLabel}<span class="day-label">First Day of School</span></div>`;
+  }
+
+  if (!ev) {
+    if (date === SCHOOL_END) {
+      return `<div class="day break">${dateLabel}<span class="day-label">Last Day of School</span></div>`;
+    }
+    if (date < SLOTS[0]) {
+      // Pre-instruction school day (orientation etc.) — no lesson placed
+      return `<div class="day">${dateLabel}</div>`;
+    }
+    return `<div class="day buffer">${dateLabel}<span class="day-label">Flex / Buffer</span></div>`;
+  }
+
+  const uc = UNIT_COLORS[ev.unit] || '';
+
+  if (ev.type === 'lesson') {
+    const optCls = ev.opt ? ' optional' : '';
+    const optTag = ev.opt ? `<span class="opt-tag">optional</span>` : '';
+    const isLastDay = view === 'original' && date === SCHOOL_END;
+    const lastDayTag = isLastDay ? `<span class="lastday-tag">Last Day of School</span>` : '';
+    const lastDayCls = isLastDay ? ' lastday-boundary' : '';
+    return `<div class="day lesson ${uc}${optCls}${lastDayCls}">${dateLabel}<span class="day-label">L${ev.n}. ${ev.t}</span>${optTag}${lastDayTag}<span class="day-badge">${ev.badge}</span></div>`;
+  }
+
+  if (ev.type === 'combined') {
+    const panelId = `why-u${ev.unit}-l${ev.n}${ev.n2}`;
+    if (ev.hasWhy) {
+      const panelOpen = !((view === 'round2' && ev.n === 8) || (view === 'round3' && ev.unit === 4) || (view === 'round4' && ev.unit !== 8));
+      return `<div class="day combined">${dateLabel}
+        <span class="day-label">L${ev.n}+L${ev.n2} Combined</span>
+        <span class="day-title">${ev.t} / ${ev.t2}</span>
+        <button class="why-btn${panelOpen ? ' open' : ''}" onclick="toggleWhyPanel('${panelId}')" aria-expanded="${panelOpen}" aria-controls="${panelId}">Why combined? <span class="why-chev">▾</span></button>
+        <span class="day-badge">${ev.badge}</span>
+      </div>`;
+    }
+    return `<div class="day combined">${dateLabel}
+      <span class="day-label">L${ev.n}+L${ev.n2} Combined</span>
+      <span class="day-title">${ev.t} / ${ev.t2}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">
+        <span class="combined-tag">combined — violation resolved</span>
+        <span class="taxonomy-tag">${ev.taxonomy}</span>
+        <span class="load-tag">load: ${ev.cogLoad}</span>
+      </div>
+      <span class="day-badge">${ev.badge}</span>
+    </div>`;
+  }
+
+  if (ev.type === 'review') {
+    const violCls = ev.violation ? ' violation' : '';
+    const tag = ev.violation
+      ? `<span class="violation-tag">${ev.newViolation ? 'NEW — Phase 3 re-runs' : 'TYPE A — weekend gap'}</span>`
+      : '';
+    return `<div class="day review${violCls}">${dateLabel}<span class="day-label">${ev.label}</span>${tag}</div>`;
+  }
+
+  if (ev.type === 'assessment') {
+    const cls = ev.assessType === 'mu' ? 'assess-mu' : 'assess-eou';
+    const violCls = ev.violation ? ' violation' : '';
+    const tag = ev.violation
+      ? `<span class="violation-tag">${ev.newViolation ? 'NEW — Phase 3 re-runs' : 'TYPE A — weekend gap'}</span>`
+      : '';
+    return `<div class="day ${cls}${violCls}">${dateLabel}<span class="day-label">${ev.label}</span><span class="day-title">U${ev.unit}</span>${tag}</div>`;
+  }
+
+  return `<div class="day">${dateLabel}</div>`;
+}
+
+function buildWeeks() {
+  // Generate all weeks from Mon Sep 7, 2026 to end of Jun 2027
+  const weeks = [];
+  let mon = new Date('2026-09-08T12:00:00Z'); // Sep 8 is actually... wait
+  // Sep 7, 2026: what day? Sep 10 = Thu, so Sep 7 = Mon ✓
+  mon = new Date('2026-09-07T12:00:00Z');
+  const stop = new Date('2027-07-05T12:00:00Z');
+
+  while (mon < stop) {
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(mon); d.setUTCDate(d.getUTCDate() + i);
+      days.push(d.toISOString().slice(0,10));
+    }
+    // Only include week if at least one day is on or after school start and on or before school end
+    const anySchool = days.some(d => d >= SCHOOL_START && d <= SCHOOL_END);
+    if (anySchool) {
+      const mStr = mon.toISOString().slice(0,10);
+      weeks.push({ monday: mStr, label: fmtDate(mStr), days });
+    }
+    mon.setUTCDate(mon.getUTCDate() + 7);
+  }
+  return weeks;
+}
+
+const ALL_WEEKS = buildWeeks();
+
+function render(view) {
+  const events = buildEvents(view);
+  detectViolations(events, view);
+  const eventMap = buildEventMap(events);
+
+  // Seed overflow events (past school year) into eventMap so they render inline
+  if (view === 'original') {
+    const overflowEvs = events.slice(SLOTS.length);
+    let nextDate = new Date(SCHOOL_END + 'T12:00:00Z');
+    for (const ev of overflowEvs) {
+      do {
+        nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      } while (nextDate.getUTCDay() === 0 || nextDate.getUTCDay() === 6);
+      eventMap[nextDate.toISOString().slice(0,10)] = { ...ev, overflow: true };
+    }
+  }
+
+  const bounds = getUnitBoundaries(eventMap);
+  const dateToUnit = buildDateToUnit(eventMap);
+
+  // Compute calendar spans per unit: min/max date assigned to each unit
+  const calSpans = {};
+  for (const [d, uid] of Object.entries(dateToUnit)) {
+    if (!calSpans[uid]) calSpans[uid] = {start:d, end:d};
+    if (d < calSpans[uid].start) calSpans[uid].start = d;
+    if (d > calSpans[uid].end) calSpans[uid].end = d;
+  }
+
+  const activeUnits = UNITS
+    .filter(u => view === 'original' || u.id !== 9)
+    .filter(u => calSpans[u.id]);
+
+  let html = `<div class="col-headers">
+    <div class="col-header"></div>
+    <div class="col-header">Mon</div>
+    <div class="col-header">Tue</div>
+    <div class="col-header">Wed</div>
+    <div class="col-header">Thu</div>
+    <div class="col-header">Fri</div>
+  </div>`;
+
+  const labeledWeeks = new Set();
+
+  for (const unit of activeUnits) {
+    const span = calSpans[unit.id];
+    const b = bounds[unit.id];
+    const allOpt = unit.sections.reduce((a,s)=>a+s.lessons.filter(l=>l.opt).length, 0);
+    const allInstr = unit.sections.reduce((a,s)=>a+s.lessons.filter(l=>!l.opt).length, 0);
+    const instrCount = b ? b.count : 0;
+    const startDate = b ? fmtDate(b.start) : fmtDate(span.start);
+    const endDate   = b ? fmtDate(b.end)   : fmtDate(span.end);
+    const meta = view === 'original'
+      ? `${allInstr} instructional + ${allOpt} optional`
+      : `${instrCount} instructional lessons`;
+
+    const isCollapsible = view === 'original' || view === 'round4' || view === 'pacing' || view === 'adjustments' || view === 'round2' || view === 'round3';
+    const startCollapsed = (view === 'original' && unit.id !== 1)
+      || (view === 'pacing' && unit.id !== 4 && unit.id !== 6)
+      || (view === 'adjustments' && ![4,5,6,8].includes(unit.id))
+      || (view === 'round2' && ![4,7].includes(unit.id))
+      || (view === 'round3' && ![7,8].includes(unit.id))
+      || (view === 'round4' && unit.id !== 8);
+    html += `<div class="unit-header">
+      <div id="unit-hdr-${unit.id}" class="unit-header-cell ${UNIT_COLORS[unit.id]}${isCollapsible ? ' collapsible' : ''}${startCollapsed ? ' collapsed' : ''}"${isCollapsible ? ` onclick="toggleUnit(${unit.id})"` : ''}>
+        <span>Unit ${unit.id}: ${unit.title}</span>
+        <span style="display:flex;align-items:center;gap:8px;"><span class="unit-meta">${startDate} – ${endDate} &nbsp;·&nbsp; ${meta}</span>${isCollapsible ? '<span class="unit-chev">▾</span>' : ''}</span>
+      </div>
+    </div>`;
+
+    // Weeks that overlap this unit's calendar span
+    const unitWeeks = ALL_WEEKS.filter(w =>
+      w.days[4] >= span.start && w.days[0] <= span.end
+    );
+
+    if (isCollapsible) html += `<div class="${startCollapsed ? 'unit-weeks collapsed' : 'unit-weeks'}" id="unit-weeks-${unit.id}">`;
+
+    for (const week of unitWeeks) {
+      // Show week label only once (first unit to claim it)
+      const lbl = labeledWeeks.has(week.monday) ? '' : week.label;
+      labeledWeeks.add(week.monday);
+
+      const cells = week.days.map(d => {
+        const du = dateToUnit[d];
+        // Day belongs to a different unit or is outside this unit's span → empty placeholder
+        if (d < span.start || d > span.end || (du !== undefined && du !== unit.id)) {
+          return `<div class="day oor"></div>`;
+        }
+        return renderDayCell(d, eventMap, view);
+      }).join('');
+
+      html += `<div class="week-row">
+        <div class="week-label">${lbl}</div>
+        ${cells}
+      </div>`;
+
+      const whyEvent = week.days
+        .filter(d => d >= span.start && d <= span.end)
+        .map(d => eventMap[d])
+        .find(ev => ev && ev.hasWhy);
+      if (whyEvent) {
+        const panelId = `why-u${whyEvent.unit}-l${whyEvent.n}${whyEvent.n2}`;
+        html += buildWhyPanel(panelId, whyEvent, view);
+      }
+    }
+
+    if (isCollapsible) html += `</div>`;
+  }
+
+  return html;
+}
+
+// ─── Tab system ────────────────────────────────────────────────────────────
+
+const DESCS = {
+  original: `<strong>Original scope and sequence — unmodified.</strong><ul style="margin:8px 0 0 16px;padding:0;"><li>All 9 units, 152 lessons (including optionals), and 13 assessments placed against the NYCPS 2026–27 calendar at one lesson per day.</li><li>Instruction begins Mon Sep 14.</li><li>Optional lessons are grayed and struck through. Unit 9 is all-optional.</li><li>At this pace, <strong style="color:#dc2626">the curriculum runs 1 lesson past the last day of school (Jun 28)</strong> — 1 lesson in Unit 9 is never taught.</li></ul>`,
+  pacing: `<strong>Pacing calendar after Phase 1–2b.</strong><ul style="margin:8px 0 0 16px;padding:0;"><li>17 optional lessons dropped across U1–U8, U9 entirely removed.</li><li>13 review days inserted (1 before each summative assessment).</li><li>126 instructional lessons + 13 review days + 13 assessments = 152 events across 164 available slots (12-day buffer).</li><li>Instruction ends May 25, with Jun 28 marked as Last Day of School.</li><li><strong style="color:#dc2626">2 violations detected (Type A, highlighted in red):</strong> U4 Mid-Unit review falls on Fri Dec 18 with assessment on Mon Dec 21 (weekend gap); U6 Mid-Unit review falls on Fri Feb 26 with assessment on Mon Mar 1 (weekend gap).</li><li><span style="color:#dc2626;font-weight:600;">Requires Phase 3 resolution.</span></li></ul>`,
+  adjustments: `<strong>Phase 3 — Run 1.</strong><ul style="margin:8px 0 0 16px;padding:0;"><li>IE targets the first violation in unit order: U4 MU (Dec 18 Fri → Dec 21 Mon).</li><li>Combine U4 L8 (How Much in Each Group? Part 1) + L9 (Part 2) into one session, shifting review to Thu Dec 17 and MU assessment to Fri Dec 18 (consecutive).</li><li>The −1 slot cascade also resolves U6 MU: review moves from Fri Feb 26 to Thu Feb 25, assessment from Mon Mar 1 to Fri Feb 26 (consecutive).</li><li>Re-scan detects <strong style="color:#dc2626">4 new TYPE A violations</strong> — four review/assessment pairs that were Mon→Tue in pacing now land Fri→Mon after the shift: U4 EoU (Jan 8→11), U5 MU (Jan 22→25), U6 EoU (Mar 12→15), U8 EoU (May 21→24).</li><li><span style="color:#dc2626;font-weight:600;">Phase 3 re-runs.</span></li></ul>`,
+  round4: `<strong>Phase 3 — Run 4.</strong><ul style="margin:8px 0 0 16px;padding:0;"><li>IE targets the last remaining violation: U8 MU (May 7 Fri → May 10 Mon).</li><li>Combine U8 L9 (Mean) + L10 (Finding and Interpreting the Mean as the Balance Point) into one session, shifting U8 MU review to Thu May 6 and assessment to Fri May 7 (consecutive).</li><li>The −1 slot resolves no additional violations.</li><li>Re-scan detects 0 violations. All 13 assessments have consecutive review days. Final buffer: 16 days.</li><li><strong style="color:#16a34a">Phase 3 complete.</strong></li></ul>`,
+  round3: `<strong>Phase 3 — Run 3.</strong><ul style="margin:8px 0 0 16px;padding:0;"><li>IE targets the first remaining violation in unit order: U7 EoU (Apr 9 Fri → Apr 12 Mon).</li><li>Combine U7 L17 (Common Multiples) + L18 (Using Common Multiples and Common Factors) into one session, shifting U7 EoU review to Thu Apr 8 and assessment to Fri Apr 9 (consecutive).</li><li>The −1 slot resolves no additional violations.</li><li>Re-scan detects <strong style="color:#dc2626">1 new TYPE A violation</strong>: U8 MU shifts to Fri May 7 → Mon May 10 (weekend gap).</li><li><span style="color:#dc2626;font-weight:600;">Phase 3 re-runs.</span></li></ul>`,
+  round2: `<strong>Phase 3 — Run 2.</strong><ul style="margin:8px 0 0 16px;padding:0;"><li>IE targets the first remaining violation in unit order: U4 EoU (Jan 8 Fri → Jan 11 Mon).</li><li>Combine U4 L1 (Size of Divisor and Size of Quotient) + L2 (Meanings of Division) into one session, shifting U4 EoU review to Thu Jan 7 and assessment to Fri Jan 8 (consecutive).</li><li>The −1 slot cascade also resolves U5 MU (Jan 22→25), U6 EoU (Mar 12→15), and U8 EoU (May 21→24).</li><li>Re-scan detects <strong style="color:#dc2626">1 new TYPE A violation</strong>: U7 EoU shifts to Fri Apr 9 → Mon Apr 12 (weekend gap).</li><li><span style="color:#dc2626;font-weight:600;">Phase 3 re-runs.</span></li></ul>`,
+};
+
+const STATS = {
+  original: [
+    {v:'9', l:'Units (incl. U9)'},
+    {v:'152', l:'Total lessons'},
+    {v:'35', l:'Optional lessons'},
+    {v:'13', l:'Assessments'},
+    {v:'0', l:'Review days'},
+    {v:'165', l:'Total events'},
+    {v:'1', l:'Lesson past Jun 28'},
+  ],
+  pacing: [
+    {v:'8', l:'Active units'},
+    {v:'126', l:'Instructional lessons'},
+    {v:'13', l:'Review days'},
+    {v:'13', l:'Assessments'},
+    {v:'152', l:'Total events'},
+    {v:'12', l:'Day buffer'},
+    {v:'2', l:'Violations (Type A)'},
+  ],
+  adjustments: [
+    {v:'8', l:'Active units'},
+    {v:'125+1', l:'Lessons (1 combined)'},
+    {v:'13', l:'Review days'},
+    {v:'13', l:'Assessments'},
+    {v:'151', l:'Total events'},
+    {v:'13', l:'Day buffer'},
+    {v:'4', l:'New violations (Type A)'},
+  ],
+  round4: [
+    {v:'8', l:'Active units'},
+    {v:'122+4', l:'Lessons (4 combined)'},
+    {v:'13', l:'Review days'},
+    {v:'13', l:'Assessments'},
+    {v:'148', l:'Total events'},
+    {v:'16', l:'Day buffer'},
+    {v:'0', l:'Violations'},
+  ],
+  round3: [
+    {v:'8', l:'Active units'},
+    {v:'123+3', l:'Lessons (3 combined)'},
+    {v:'13', l:'Review days'},
+    {v:'13', l:'Assessments'},
+    {v:'149', l:'Total events'},
+    {v:'15', l:'Day buffer'},
+    {v:'1', l:'New violation (U8 MU)'},
+  ],
+  round2: [
+    {v:'8', l:'Active units'},
+    {v:'124+2', l:'Lessons (2 combined)'},
+    {v:'13', l:'Review days'},
+    {v:'13', l:'Assessments'},
+    {v:'150', l:'Total events'},
+    {v:'14', l:'Day buffer'},
+    {v:'1', l:'New violation (U7 EoU)'},
+  ],
+};
+
+const LEGENDS = {
+  original: [
+    {color:'#4e79a7',label:'Unit lesson (colored by unit)'},
+    {color:'#fef9c3',border:'#d97706',label:'Optional lesson (grayed, struck through)'},
+    {color:'#ede9fe',border:'#7c3aed',label:'Mid-Unit Assessment'},
+    {color:'#ddd6fe',border:'#4c1d95',label:'End-of-Unit Assessment'},
+    {color:'#f3f4f6',label:'Non-instructional day'},
+    {color:'#fef9ee',border:'#d97706',label:'Half day — no instruction'},
+    {color:'#e0f7fa',border:'#0891b2',label:'Regents Administration'},
+  ],
+  pacing: [
+    {color:'#dcfce7',border:'#16a34a',label:'Review day'},
+    {color:'#ede9fe',border:'#7c3aed',label:'Mid-Unit Assessment'},
+    {color:'#ddd6fe',border:'#4c1d95',label:'End-of-Unit Assessment'},
+    {color:'#fee2e2',border:'#dc2626',label:'TYPE A Violation (weekend gap)'},
+    {color:'#f9fafb',border:'#e5e7eb',label:'Flex / buffer day (dashed)'},
+  ],
+  adjustments: [
+    {color:'#fef3c7',border:'#92400e',label:'Combined lesson (U4 L8+L9)'},
+    {color:'#dcfce7',border:'#16a34a',label:'Review day'},
+    {color:'#ede9fe',border:'#7c3aed',label:'Mid-Unit Assessment'},
+    {color:'#ddd6fe',border:'#4c1d95',label:'End-of-Unit Assessment'},
+    {color:'#fee2e2',border:'#dc2626',label:'NEW violations — weekend gap (4 total)'},
+    {color:'#f9fafb',border:'#e5e7eb',label:'Flex / buffer day'},
+  ],
+  round4: [
+    {color:'#fef3c7',border:'#92400e',label:'Combined lessons (U4 L8+L9, L1+L2; U7 L17+L18; U8 L9+L10)'},
+    {color:'#dcfce7',border:'#16a34a',label:'Review day'},
+    {color:'#ede9fe',border:'#7c3aed',label:'Mid-Unit Assessment'},
+    {color:'#ddd6fe',border:'#4c1d95',label:'End-of-Unit Assessment'},
+    {color:'#f9fafb',border:'#e5e7eb',label:'Flex / buffer day'},
+  ],
+  round3: [
+    {color:'#fef3c7',border:'#92400e',label:'Combined lessons (U4 L8+L9, L1+L2; U7 L17+L18)'},
+    {color:'#dcfce7',border:'#16a34a',label:'Review day'},
+    {color:'#ede9fe',border:'#7c3aed',label:'Mid-Unit Assessment'},
+    {color:'#ddd6fe',border:'#4c1d95',label:'End-of-Unit Assessment'},
+    {color:'#fee2e2',border:'#dc2626',label:'NEW violation — weekend gap (1 total)'},
+    {color:'#f9fafb',border:'#e5e7eb',label:'Flex / buffer day'},
+  ],
+  round2: [
+    {color:'#fef3c7',border:'#92400e',label:'Combined lessons (U4 L8+L9 and L1+L2)'},
+    {color:'#dcfce7',border:'#16a34a',label:'Review day'},
+    {color:'#ede9fe',border:'#7c3aed',label:'Mid-Unit Assessment'},
+    {color:'#ddd6fe',border:'#4c1d95',label:'End-of-Unit Assessment'},
+    {color:'#fee2e2',border:'#dc2626',label:'NEW violation — weekend gap (1 total)'},
+    {color:'#f9fafb',border:'#e5e7eb',label:'Flex / buffer day'},
+  ],
+};
+
+function whyRow(kept, num, label, time, reason) {
+  const dot = `<span style="width:6px;height:6px;border-radius:50%;background:${kept ? '#16a34a' : '#9ca3af'};flex-shrink:0;margin-top:4px;"></span>`;
+  const txt = kept
+    ? `<span style="font-size:11px;">${num} ${label}</span>`
+    : `<div style="flex:1;min-width:0;"><span style="font-size:11px;color:#9ca3af;text-decoration:line-through;">${num} ${label}</span><span style="display:block;font-size:10px;color:#9ca3af;">${reason}</span></div>`;
+  return `<div style="display:flex;align-items:flex-start;gap:6px;">${dot}${kept ? `<div style="flex:1;">` + txt + `</div>` : txt}<span style="font-size:10px;color:#9ca3af;white-space:nowrap;flex-shrink:0;">${time}</span></div>`;
+}
+
+const WHY_DATA = {
+  'l8l9': {
+    scheduleReason: 'The mid-unit review and assessment days originally landed on non-consecutive school days, split across the weekend. Combining these two lessons frees one slot, so the review and assessment days fall on consecutive school days.',
+    pairRationale: 'L8 and L9 are a Part 1/Part 2 pair: L8 introduces finding how much in each group using unit fractions, L9 extends the method to non-unit fractions. Both build the same operation — they are structurally designed as a two-session arc.',
+    l1: 'LESSON 8', l2: 'LESSON 9',
+    components1: [
+      [true,  '8.1', 'Warm-up: "What Do You Know About Division?"', '5 min', ''],
+      [true,  '8.2', 'Activity 1: "Dividing by a Unit Fraction"', '15 min', ''],
+      [false, '8.3', 'Activity 2: "Fraction Division Situations"', '15 min', 'overlapping setup — L9 A1 covers same ground'],
+      [false, '8.4', 'Lesson synthesis', '10 min', 'replaced by shared closing below'],
+    ],
+    components2: [
+      [false, '9.1', 'Warm-up: Estimation Exploration', '5 min', 'redundant — L8 opens the arc'],
+      [true,  '9.2', 'Activity 1: "How Much in Each Group?"', '20 min', ''],
+      [true,  '9.3', 'Lesson synthesis — shared closing', '5 min', ''],
+      [true,  '9.4', 'Cool-down', '10 min', ''],
+    ],
+    retained: '55', hidden: '30', raw: '85', pct: '64.7',
+  },
+  'l1l2': {
+    scheduleReason: 'The end-of-unit review and assessment days originally landed on non-consecutive school days, split across the weekend. Combining these two lessons frees one slot, so the review and assessment days fall on consecutive school days.',
+    pairRationale: 'Lessons 1 and 2 share one conceptual arc: L1 builds the intuition (bigger divisor, smaller quotient), L2 names it formally (the two meanings of division). Together they read as a single complete idea.',
+    l1: 'LESSON 1', l2: 'LESSON 2',
+    components1: [
+      [true,  '1.1', 'Warm-up: "Which One Doesn\'t Belong?"', '5 min', ''],
+      [true,  '1.2', 'Activity 1: "What is the Quotient?"', '15 min', ''],
+      [false, '1.3', 'Activity 2: "All in Order"', '15 min', 'enrichment, not on critical path'],
+      [false, '1.4', 'Lesson synthesis', '10 min', 'replaced by shared closing below'],
+    ],
+    components2: [
+      [false, '2.1', 'Warm-up: Estimation Exploration', '5 min', 'redundant — L1 opens the arc'],
+      [true,  '2.2', 'Activity 1: "Two Meanings of Division"', '20 min', ''],
+      [true,  '2.3', 'Lesson synthesis — shared closing', '5 min', ''],
+      [true,  '2.4', 'Cool-down', '10 min', ''],
+    ],
+    retained: '55', hidden: '30', raw: '85', pct: '64.7',
+  },
+  'l9l10': {
+    scheduleReason: 'The mid-unit review and assessment days originally landed on non-consecutive school days, split across the weekend. Combining these two lessons frees one slot, so the review and assessment days fall on consecutive school days.',
+    pairRationale: 'L9 and L10 teach the same concept two ways: L9 builds mean as fair share through a leveling-out model, L10 reframes it as the balance point on a dot plot. They are two lenses on one idea, and L10\'s core activity picks up directly where L9\'s leaves off.',
+    l1: 'LESSON 9', l2: 'LESSON 10',
+    components1: [
+      [true,  '9.1', 'Warm-up: "Close to Four"', '5 min', ''],
+      [true,  '9.2', 'Activity 1: "Spread Out and Share"', '15 min', ''],
+      [false, '9.3', 'Activity 2: "Getting to School"', '15 min', 'explicitly optional'],
+      [false, '9.4', 'Lesson synthesis', '5 min', 'replaced by shared closing below'],
+    ],
+    components2: [
+      [false, '10.1', 'Warm-up: "Which Three Go Together: Division"', '5 min', 'redundant — L9 opens on mean calculation'],
+      [true,  '10.2', 'Activity 1: "Travel Times, Part 1"', '15 min', ''],
+      [false, '10.3', 'Activity 2: "Travel Times, Part 2"', '15 min', 'extension of Part 1 — balance point concept complete'],
+      [true,  '10.4', 'Lesson synthesis — shared closing', '5 min', ''],
+      [true,  '10.5', 'Cool-down: "Text Messages"', '5 min', ''],
+    ],
+    retained: '50', hidden: '40', raw: '90', pct: '55.6',
+  },
+  'l17l18': {
+    scheduleReason: 'The end-of-unit review and assessment days originally landed on non-consecutive school days, split across the weekend. Combining these two lessons frees one slot, so the review and assessment days fall on consecutive school days.',
+    pairRationale: 'Lesson 17 teaches one tool: the least common multiple. Lesson 18 asks students to look at a real problem and decide whether to reach for GCF or LCM. They are designed as back-to-back steps: learn the tool, then choose between tools. L18 introduces no new concept of its own; the cognitive work is selection and justification, not acquisition. L17 provides the full conceptual bridge.',
+    caveat: 'This pair retains 65 minutes after valid component hiding, which is 10 minutes over the 55-minute session target. It is the closest available pair in Unit 7; no pair in this unit can reach the 55-minute limit with the available lesson pool.',
+    l1: 'LESSON 17', l2: 'LESSON 18',
+    components1: [
+      [true,  '17.1', 'Warm-up', '5 min', ''],
+      [true,  '17.2', 'Activity 1: "Multiples and Common Multiples"', '10 min', ''],
+      [true,  '17.3', 'Activity 2: "Least Common Multiple"', '10 min', ''],
+      [false, '17.4', 'Activity 3: "Prizes on Grand Opening Day"', '10 min', 'application extension; covered by L18 A1'],
+      [false, '17.5', 'Lesson synthesis', '5 min', 'replaced by shared closing below'],
+    ],
+    components2: [
+      [false, '18.1', 'Warm-up: "Keeping a Steady Beat"', '5 min', 'redundant — L17 closes on LCM'],
+      [true,  '18.2', 'Activity 1: "Factors and Multiples"', '25 min', ''],
+      [true,  '18.3', 'Lesson synthesis — shared closing', '5 min', ''],
+      [true,  '18.4', 'Cool-down', '5 min', ''],
+    ],
+    retained: '65', hidden: '20', raw: '85', pct: '76.5',
+  },
+};
+
+function buildWhyPanel(panelId, ev, view) {
+  const key = ev.n === 8 ? 'l8l9' : ev.n === 1 ? 'l1l2' : ev.n === 17 ? 'l17l18' : 'l9l10';
+  const startOpen = !((view === 'round2' && ev.n === 8) || (view === 'round3' && ev.unit === 4) || (view === 'round4' && ev.unit !== 8));
+  const d = WHY_DATA[key];
+  const rows1 = d.components1.map(c => whyRow(...c)).join('');
+  const rows2 = d.components2.map(c => whyRow(...c)).join('');
+  return `<div class="why-panel${startOpen ? ' open' : ''}" id="${panelId}">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <strong style="color:var(--c-combined);font-size:12px;">L${ev.n}+L${ev.n2} — lesson combination rationale</strong>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div>
+        <p style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Why combined</p>
+        <p style="margin-bottom:8px;">${d.scheduleReason}</p>
+        <p>${d.pairRationale}</p>
+        ${d.caveat ? `<div style="margin-top:10px;padding:8px 10px;background:#fef3c7;border-left:3px solid #d97706;border-radius:2px;font-size:11px;color:#92400e;line-height:1.5;">${d.caveat}</div>` : ''}
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+          <p style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.04em;">Session plan</p>
+          <span style="font-size:11px;font-weight:600;color:var(--c-combined);">${d.retained} min</span>
+        </div>
+        <p style="font-size:10px;color:var(--c-muted);margin-bottom:4px;letter-spacing:.04em;">${d.l1}</p>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">${rows1}</div>
+        <p style="font-size:10px;color:var(--c-muted);margin-bottom:4px;letter-spacing:.04em;">${d.l2}</p>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">${rows2}</div>
+        <div style="border-top:1px solid #d97706;padding-top:8px;">
+          <div style="height:5px;border-radius:3px;background:#e5e7eb;overflow:hidden;margin-bottom:4px;">
+            <div style="height:100%;width:${d.pct}%;background:#16a34a;border-radius:3px 0 0 3px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;">
+            <span style="color:#16a34a;font-weight:600;">${d.retained} min retained</span>
+            <span style="color:var(--c-muted);">${d.hidden} min hidden · ${d.raw} min raw</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleUnit(unitId) {
+  const weeks = document.getElementById(`unit-weeks-${unitId}`);
+  const hdr = document.getElementById(`unit-hdr-${unitId}`);
+  if (!weeks) return;
+  const isOpen = !weeks.classList.contains('collapsed');
+  weeks.classList.toggle('collapsed', isOpen);
+  hdr.classList.toggle('collapsed', isOpen);
+}
+
+function toggleWhyPanel(id) {
+  const panel = document.getElementById(id);
+  const btn = document.querySelector(`[aria-controls="${id}"]`);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  if (btn) {
+    btn.classList.toggle('open', !isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+  }
+}
+
+let currentView = 'original';
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['original','pacing','adjustments','round2','round3','round4'][i] === view);
+  });
+  document.getElementById('view-desc').innerHTML = DESCS[view];
+
+  const stats = STATS[view].map(s => `<div class="stat"><span class="stat-val">${s.v}</span><span class="stat-lbl">${s.l}</span></div>`).join('');
+  document.getElementById('stats-bar').innerHTML = `<div class="stats-bar">${stats}</div>`;
+
+  const leg = LEGENDS[view].map(l => {
+    const border = l.border ? `border:1.5px solid ${l.border};` : '';
+    return `<div class="legend-item"><div class="legend-swatch" style="background:${l.color};${border}"></div><span>${l.label}</span></div>`;
+  }).join('');
+  document.getElementById('legend').innerHTML = `<div class="legend">${leg}</div>`;
+
+  const calEl = document.getElementById('calendar');
+  calEl.innerHTML = '<div class="cal">' + render(view) + '</div>';
+}
+
+// Initial render
+setView('original');
+</script>
+</body>
+</html>
